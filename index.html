@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Rock im Ring Getränke</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1B1815">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  /* ====== DESIGN TOKENS ====== */
+  :root{
+    --bg:#1B1815;
+    --panel:#262220;
+    --field:#322C27;
+    --text:#F3EFE7;
+    --text-dim:#A79C8D;
+    --accent:#F2A93B;
+    --accent-ink:#1B1815;
+    --danger:#E1503D;
+    --warn:#D98A34;
+    --good:#6FA96B;
+    --radius-lg:18px;
+    --radius-sm:10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    -webkit-tap-highlight-color:transparent;
+    overscroll-behavior:none;
+  }
+  h1,h2,h3{
+    font-family:"Arial Black","Helvetica Neue",Arial,sans-serif;
+    letter-spacing:-0.01em;
+    margin:0 0 4px 0;
+    font-weight:900;
+  }
+  .app{max-width:640px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;}
+  .topbar{padding:18px 20px 10px 20px;}
+  .topbar h1{font-size:20px;color:var(--text-dim);font-weight:700;}
+  .screen{flex:1;padding:0 16px 96px 16px;display:none;}
+  .screen.active{display:block;}
+
+  .hero-btn{
+    display:block;width:100%;border:none;background:var(--accent);color:var(--accent-ink);
+    border-radius:var(--radius-lg);padding:28px 20px;font-size:26px;font-family:"Arial Black","Helvetica Neue",Arial,sans-serif;
+    font-weight:900;text-align:left;cursor:pointer;margin-bottom:14px;
+  }
+  .hero-btn small{display:block;font-size:14px;font-weight:600;opacity:0.75;margin-top:4px;}
+
+  .card{background:var(--panel);border-radius:var(--radius-sm);padding:16px;margin-bottom:12px;}
+  .card h3{font-size:15px;color:var(--text-dim);text-transform:none;}
+
+  label{display:block;font-size:13px;color:var(--text-dim);margin:14px 0 6px 0;}
+  input[type=text],input[type=number],input[type=date],select,textarea{
+    width:100%;background:var(--field);border:1px solid #453e37;color:var(--text);
+    border-radius:var(--radius-sm);padding:14px;font-size:17px;font-family:inherit;
+  }
+  input:focus,select:focus,button:focus{outline:2px solid var(--accent);outline-offset:2px;}
+
+  .btn{
+    background:var(--field);color:var(--text);border:1px solid #453e37;border-radius:var(--radius-sm);
+    padding:14px 16px;font-size:16px;font-weight:700;cursor:pointer;
+  }
+  .btn.primary{background:var(--accent);color:var(--accent-ink);border:none;}
+  .btn.danger{background:var(--danger);color:#fff;border:none;}
+  .btn-row{display:flex;gap:10px;flex-wrap:wrap;}
+  .btn-row .btn{flex:1;min-width:120px;}
+
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .grid-choice button{width:100%;padding:16px;margin-bottom:8px;border-radius:var(--radius-sm);
+    border:1px solid #453e37;background:var(--field);color:var(--text);font-size:16px;font-weight:700;cursor:pointer;text-align:left;}
+  .grid-choice button.selected{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);}
+
+  .pos-item{display:flex;justify-content:space-between;align-items:center;background:var(--field);
+    border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:8px;}
+  .pos-item .remove{color:var(--danger);background:none;border:none;font-size:20px;cursor:pointer;}
+
+  .stock-card{display:flex;justify-content:space-between;align-items:center;border-left:6px solid var(--good);
+    background:var(--panel);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:10px;}
+  .stock-card.warn{border-left-color:var(--warn);}
+  .stock-card.danger{border-left-color:var(--danger);}
+  .stock-card .amt{font-size:22px;font-weight:900;font-family:"Arial Black","Helvetica Neue",Arial,sans-serif;}
+  .stock-card .sub{font-size:13px;color:var(--text-dim);}
+
+  table{width:100%;border-collapse:collapse;font-size:14px;}
+  th,td{text-align:left;padding:10px 6px;border-bottom:1px solid #3a332c;}
+  th{color:var(--text-dim);font-weight:600;}
+
+  .navbar{position:fixed;bottom:0;left:0;right:0;background:var(--panel);border-top:1px solid #3a332c;
+    display:flex;max-width:640px;margin:0 auto;}
+  .navbar button{flex:1;background:none;border:none;color:var(--text-dim);padding:12px 4px 10px 4px;
+    font-size:12px;font-weight:700;cursor:pointer;}
+  .navbar button.active{color:var(--accent);}
+
+  .toast{position:fixed;bottom:78px;left:16px;right:16px;max-width:608px;margin:0 auto;background:var(--field);
+    color:var(--text);padding:14px 16px;border-radius:var(--radius-sm);font-size:14px;
+    box-shadow:0 6px 20px rgba(0,0,0,0.4);display:none;z-index:50;}
+  .toast.show{display:block;}
+  .toast.error{background:var(--danger);color:#fff;}
+
+  .login-wrap{display:flex;flex-direction:column;justify-content:center;min-height:100vh;padding:20px;}
+  .login-wrap h1{font-size:30px;margin-bottom:2px;}
+  .login-wrap p{color:var(--text-dim);margin-bottom:24px;}
+
+  .admin-subnav{display:flex;gap:8px;overflow-x:auto;margin:12px 0 16px 0;padding-bottom:4px;}
+  .admin-subnav button{flex:none;background:var(--field);color:var(--text-dim);border:none;border-radius:20px;
+    padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;}
+  .admin-subnav button.active{background:var(--accent);color:var(--accent-ink);}
+  .admin-pane{display:none;}
+  .admin-pane.active{display:block;}
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<div id="screen-login" class="login-wrap">
+  <h1>Rock im Ring</h1>
+  <p>Getränkeverwaltung</p>
+  <label for="pin-input">PIN eingeben</label>
+  <input type="text" inputmode="numeric" id="pin-input" placeholder="••••">
+  <div style="height:14px"></div>
+  <button class="btn primary" style="width:100%" onclick="doLogin()">Anmelden</button>
+  <div id="login-error" style="color:var(--danger);margin-top:12px;"></div>
+</div>
+
+<!-- ============ APP ============ -->
+<div class="app" id="app" style="display:none;">
+  <div class="topbar"><h1>Rock im Ring · Getränke</h1></div>
+
+  <!-- AUSGABE -->
+  <div id="screen-ausgabe" class="screen">
+    <label>Wer holt ab?</label>
+    <input type="text" id="ausgabe-name" list="name-vorschlaege" placeholder="Name eingeben">
+    <datalist id="name-vorschlaege"></datalist>
+
+    <label>Für welchen Budel?</label>
+    <div id="budel-choice" class="grid-choice"></div>
+    <div id="budel-freitext-wrap" style="display:none;">
+      <label>Welcher Bereich?</label>
+      <input type="text" id="budel-freitext" placeholder="z. B. Backstage, VIP, Crew">
+    </div>
+
+    <div class="card">
+      <h3>Was wird abgeholt?</h3>
+      <label>Getränk</label>
+      <select id="pos-getraenk"></select>
+      <div class="grid-2">
+        <div><label>Menge</label><input type="number" id="pos-menge" min="0" step="1" value="1"></div>
+        <div><label>Einheit</label><select id="pos-einheit"></select></div>
+      </div>
+      <div style="height:10px"></div>
+      <button class="btn" style="width:100%" onclick="addPosition()">+ Getränk hinzufügen</button>
+    </div>
+
+    <div id="positions-list"></div>
+
+    <button class="hero-btn" onclick="submitAusgabe()">Ausgabe bestätigen
+      <small>Bestand wird sofort reduziert</small>
+    </button>
+  </div>
+
+  <!-- BESTAND -->
+  <div id="screen-bestand" class="screen">
+    <h2 style="margin:16px 0;">Aktueller Bestand</h2>
+    <div id="bestand-list"></div>
+  </div>
+
+  <!-- HISTORIE -->
+  <div id="screen-historie" class="screen">
+    <h2 style="margin:16px 0;">Ausgabehistorie</h2>
+    <div class="card">
+      <div class="grid-2">
+        <div><label>Datum</label><input type="date" id="filter-datum"></div>
+        <div><label>Name</label><input type="text" id="filter-name"></div>
+      </div>
+      <div class="grid-2">
+        <div><label>Budel</label><select id="filter-budel"><option value="">Alle</option></select></div>
+        <div><label>Getränk</label><select id="filter-getraenk"><option value="">Alle</option></select></div>
+      </div>
+      <div style="height:10px"></div>
+      <button class="btn primary" style="width:100%" onclick="loadHistorie()">Filtern</button>
+    </div>
+    <div style="overflow-x:auto;">
+      <table id="historie-table">
+        <thead><tr><th>Zeit</th><th>Name</th><th>Budel</th><th>Getränk</th><th>Menge</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ADMIN -->
+  <div id="screen-admin" class="screen">
+    <h2 style="margin:16px 0;">Admin</h2>
+    <div class="admin-subnav">
+      <button data-pane="admin-getraenke" onclick="showAdminPane('admin-getraenke')" class="active">Getränke</button>
+      <button data-pane="admin-budel" onclick="showAdminPane('admin-budel')">Budel</button>
+      <button data-pane="admin-nachlieferung" onclick="showAdminPane('admin-nachlieferung')">Nachschub</button>
+      <button data-pane="admin-verkauf" onclick="showAdminPane('admin-verkauf')">Verkäufe</button>
+      <button data-pane="admin-auswertung" onclick="showAdminPane('admin-auswertung')">Auswertung</button>
+      <button data-pane="admin-export" onclick="showAdminPane('admin-export')">Export</button>
+    </div>
+
+    <div id="admin-getraenke" class="admin-pane active">
+      <div class="card">
+        <h3>Getränk hinzufügen / bearbeiten</h3>
+        <input type="hidden" id="g-id">
+        <label>Name</label><input type="text" id="g-name">
+        <label>Basiseinheit</label><input type="text" id="g-basis" placeholder="z. B. Flasche">
+        <div class="grid-2">
+          <div><label>Gebinde-Name</label><input type="text" id="g-gebinde" placeholder="z. B. Kiste (optional)"></div>
+          <div><label>Menge pro Gebinde</label><input type="number" id="g-gebindefaktor"></div>
+        </div>
+        <div class="grid-2">
+          <div><label>Verkaufseinheit</label><input type="text" id="g-verkauf" placeholder="z. B. Glas (optional)"></div>
+          <div><label>Volumen pro Verkaufseinheit (L)</label><input type="number" step="0.01" id="g-verkaufvol"></div>
+        </div>
+        <label>Volumen pro Basiseinheit (L)</label><input type="number" step="0.01" id="g-basisvol">
+        <div class="grid-2">
+          <div><label>Kritisch ab (Basiseinheit)</label><input type="number" id="g-kritisch" value="0"></div>
+          <div><label>Niedrig ab (Basiseinheit)</label><input type="number" id="g-niedrig" value="0"></div>
+        </div>
+        <label>Anfangsbestand (nur beim Anlegen, in Basiseinheit)</label><input type="number" id="g-anfang" value="0">
+        <div style="height:10px"></div>
+        <div class="btn-row">
+          <button class="btn primary" onclick="saveGetraenk()">Speichern</button>
+          <button class="btn" onclick="resetGetraenkForm()">Neues Getränk</button>
+        </div>
+      </div>
+      <div id="getraenke-admin-list"></div>
+    </div>
+
+    <div id="admin-budel" class="admin-pane">
+      <div class="card">
+        <h3>Budel hinzufügen</h3>
+        <label>Name</label><input type="text" id="b-name">
+        <label style="display:flex;align-items:center;gap:8px;margin-top:14px;">
+          <input type="checkbox" id="b-sonstiges" style="width:auto;"> Ist der "Sonstiges"-Bereich (mit Freitext)
+        </label>
+        <div style="height:10px"></div>
+        <button class="btn primary" style="width:100%" onclick="saveBudel()">Speichern</button>
+      </div>
+      <div id="budel-admin-list"></div>
+    </div>
+
+    <div id="admin-nachlieferung" class="admin-pane">
+      <div class="card">
+        <h3>Nachlieferung eintragen</h3>
+        <label>Getränk</label><select id="n-getraenk"></select>
+        <div class="grid-2">
+          <div><label>Menge</label><input type="number" id="n-menge" value="1"></div>
+          <div><label>Einheit</label><select id="n-einheit"></select></div>
+        </div>
+        <label>Eingetragen von</label><input type="text" id="n-von">
+        <div style="height:10px"></div>
+        <button class="btn primary" style="width:100%" onclick="submitNachlieferung()">Nachlieferung buchen</button>
+      </div>
+    </div>
+
+    <div id="admin-verkauf" class="admin-pane">
+      <div class="card">
+        <h3>Verkaufszahl eintragen</h3>
+        <label>Getränk</label><select id="v-getraenk"></select>
+        <label>Tag</label><input type="text" id="v-tag" placeholder="z. B. Freitag">
+        <div class="grid-2">
+          <div><label>Verkaufte Menge</label><input type="number" id="v-menge"></div>
+          <div><label>Einheit</label><select id="v-einheit"></select></div>
+        </div>
+        <div style="height:10px"></div>
+        <button class="btn primary" style="width:100%" onclick="submitVerkaufszahl()">Speichern</button>
+      </div>
+    </div>
+
+    <div id="admin-auswertung" class="admin-pane">
+      <div class="card">
+        <button class="btn primary" style="width:100%" onclick="loadAuswertung()">Auswertung laden</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table id="auswertung-table">
+          <thead><tr><th>Getränk</th><th>Ausgegeben</th><th>Verkauft</th><th>Diff.</th><th>Diff. %</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="admin-export" class="admin-pane">
+      <div class="card">
+        <h3>Daten exportieren (CSV)</h3>
+        <div class="btn-row">
+          <button class="btn" onclick="exportHistorieCsv()">Historie</button>
+          <button class="btn" onclick="exportBestandCsv()">Bestand</button>
+          <button class="btn" onclick="exportAuswertungCsv()">Auswertung</button>
+        </div>
+        <p style="color:var(--text-dim);font-size:13px;margin-top:12px;">Lädt jeweils die zuletzt geladenen Daten der entsprechenden Ansicht als CSV-Datei herunter.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="navbar">
+    <button data-screen="ausgabe" onclick="showScreen('ausgabe')" class="active">Ausgabe</button>
+    <button data-screen="bestand" onclick="showScreen('bestand')">Bestand</button>
+    <button data-screen="historie" onclick="showScreen('historie')">Historie</button>
+    <button data-screen="admin" id="nav-admin" onclick="showScreen('admin')" style="display:none;">Admin</button>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+/* =========================================================
+   KONFIGURATION – HIER DEINE APPS-SCRIPT-URL EINTRAGEN
+   ========================================================= */
+const API_URL = "https://script.google.com/macros/s/AKfycbyAoz-XN2JLKZHLcJEneVUcGIn61d_yKBZBb8oUtnm6EJEZbFHRNO9FFWcf_RAm4KOYQQ/exec";
+
+/* =========================================================
+   STATE
+   ========================================================= */
+let ROLE = localStorage.getItem('rir_role') || null;
+let GETRAENKE = [];
+let BUDEL = [];
+let POSITIONS = [];
+let SELECTED_BUDEL = null;
+let LAST_HISTORIE = [];
+let LAST_BESTAND = [];
+let LAST_AUSWERTUNG = [];
+
+/* =========================================================
+   API-ZUGRIFF
+   Hinweis: Wir senden als Content-Type "text/plain", damit der
+   Browser keine CORS-Preflight-Anfrage schickt (Apps Script
+   Web-Apps beantworten Preflight-Anfragen nicht zuverlässig).
+   ========================================================= */
+async function apiCall(action, payload) {
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    headers: {'Content-Type': 'text/plain;charset=utf-8'},
+    body: JSON.stringify({action, payload: payload || {}})
+  });
+  return await res.json();
+}
+
+function showToast(msg, isError) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(() => { t.className = 'toast'; }, 3500);
+}
+
+/* =========================================================
+   LOGIN
+   ========================================================= */
+async function doLogin() {
+  const pin = document.getElementById('pin-input').value.trim();
+  document.getElementById('login-error').textContent = '';
+  try {
+    const r = await apiCall('login', {pin});
+    if (r.success) {
+      ROLE = r.role;
+      localStorage.setItem('rir_role', ROLE);
+      enterApp();
+    } else {
+      document.getElementById('login-error').textContent = r.error || 'PIN ungültig';
+    }
+  } catch (e) {
+    document.getElementById('login-error').textContent = 'Keine Verbindung zum Server. Ist die API-URL korrekt eingetragen und besteht Internet?';
+  }
+}
+
+function enterApp() {
+  document.getElementById('screen-login').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  if (ROLE === 'admin') document.getElementById('nav-admin').style.display = 'block';
+  loadStammdaten();
+  showScreen('ausgabe');
+  flushOfflineQueue();
+}
+
+/* =========================================================
+   NAVIGATION
+   ========================================================= */
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  document.querySelectorAll('.navbar button').forEach(b => b.classList.remove('active'));
+  document.querySelector('.navbar button[data-screen="' + name + '"]').classList.add('active');
+  if (name === 'bestand') loadBestand();
+  if (name === 'historie') loadHistorie();
+}
+
+function showAdminPane(id) {
+  document.querySelectorAll('.admin-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.admin-subnav button').forEach(b => b.classList.remove('active'));
+  document.querySelector('.admin-subnav button[data-pane="' + id + '"]').classList.add('active');
+}
+
+/* =========================================================
+   STAMMDATEN LADEN (Getränke & Budel)
+   ========================================================= */
+async function loadStammdaten() {
+  try {
+    const [gRes, bRes] = await Promise.all([
+      apiCall('getGetraenke', {includeInactive: ROLE === 'admin'}),
+      apiCall('getBudel', {})
+    ]);
+    GETRAENKE = gRes.data || [];
+    BUDEL = bRes.data || [];
+    renderBudelChoice();
+    renderGetraenkSelect();
+    renderFilterSelects();
+    if (ROLE === 'admin') {
+      renderAdminGetraenkeList();
+      renderAdminBudelList();
+      renderSelect('n-getraenk', GETRAENKE, g => g.ID, g => g.Name);
+      renderSelect('v-getraenk', GETRAENKE, g => g.ID, g => g.Name);
+      updateUnitSelect('n-getraenk', 'n-einheit');
+      updateUnitSelect('v-getraenk', 'v-einheit');
+    }
+    const namen = JSON.parse(localStorage.getItem('rir_namen') || '[]');
+    document.getElementById('name-vorschlaege').innerHTML = namen.map(n => `<option value="${escapeHtml(n)}">`).join('');
+  } catch (e) {
+    showToast('Stammdaten konnten nicht geladen werden – prüfe die Internetverbindung.', true);
+  }
+}
+
+function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* =========================================================
+   AUSGABE-BILDSCHIRM
+   ========================================================= */
+function renderBudelChoice() {
+  const wrap = document.getElementById('budel-choice');
+  wrap.innerHTML = '';
+  BUDEL.forEach(b => {
+    const btn = document.createElement('button');
+    btn.textContent = b.Name;
+    btn.onclick = () => selectBudel(b);
+    wrap.appendChild(btn);
+  });
+}
+
+function selectBudel(b) {
+  SELECTED_BUDEL = b;
+  document.querySelectorAll('#budel-choice button').forEach(x => x.classList.remove('selected'));
+  event.target.classList.add('selected');
+  const istSonstiges = String(b.IstSonstigesTyp).toUpperCase() === 'JA';
+  document.getElementById('budel-freitext-wrap').style.display = istSonstiges ? 'block' : 'none';
+}
+
+function renderGetraenkSelect() {
+  renderSelect('pos-getraenk', GETRAENKE, g => g.ID, g => g.Name);
+  updateUnitSelect('pos-getraenk', 'pos-einheit');
+  document.getElementById('pos-getraenk').onchange = () => updateUnitSelect('pos-getraenk', 'pos-einheit');
+}
+
+function renderSelect(selectId, items, valueFn, labelFn) {
+  const el = document.getElementById(selectId);
+  el.innerHTML = items.map(i => `<option value="${valueFn(i)}">${escapeHtml(labelFn(i))}</option>`).join('');
+}
+
+function updateUnitSelect(getraenkSelectId, unitSelectId) {
+  const gid = document.getElementById(getraenkSelectId).value;
+  const g = GETRAENKE.find(x => x.ID === gid);
+  const unitEl = document.getElementById(unitSelectId);
+  if (!g) { unitEl.innerHTML = ''; return; }
+  const opts = [g.Basiseinheit];
+  if (g.GebindeName) opts.push(g.GebindeName);
+  if (g.VerkaufseinheitName) opts.push(g.VerkaufseinheitName);
+  unitEl.innerHTML = opts.map(o => `<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('');
+}
+
+function addPosition() {
+  const gid = document.getElementById('pos-getraenk').value;
+  const g = GETRAENKE.find(x => x.ID === gid);
+  const menge = Number(document.getElementById('pos-menge').value);
+  const einheit = document.getElementById('pos-einheit').value;
+  if (!g || !menge || menge <= 0) { showToast('Bitte Getränk und Menge angeben.', true); return; }
+  POSITIONS.push({getraenkId: gid, name: g.Name, menge, einheit});
+  renderPositions();
+}
+
+function renderPositions() {
+  const wrap = document.getElementById('positions-list');
+  wrap.innerHTML = POSITIONS.map((p, i) => `
+    <div class="pos-item">
+      <span>${p.menge} ${escapeHtml(p.einheit)} ${escapeHtml(p.name)}</span>
+      <button class="remove" onclick="removePosition(${i})">×</button>
+    </div>`).join('');
+}
+
+function removePosition(i) { POSITIONS.splice(i, 1); renderPositions(); }
+
+async function submitAusgabe() {
+  const name = document.getElementById('ausgabe-name').value.trim();
+  if (!name) return showToast('Bitte einen Namen eingeben.', true);
+  if (!SELECTED_BUDEL) return showToast('Bitte einen Budel auswählen.', true);
+  if (POSITIONS.length === 0) return showToast('Bitte mindestens ein Getränk hinzufügen.', true);
+  const istSonstiges = String(SELECTED_BUDEL.IstSonstigesTyp).toUpperCase() === 'JA';
+  const budelFreitext = istSonstiges ? document.getElementById('budel-freitext').value.trim() : '';
+  if (istSonstiges && !budelFreitext) return showToast('Bitte den Bereich angeben.', true);
+
+  const payload = {
+    name, budelId: SELECTED_BUDEL.ID, budelFreitext,
+    positionen: POSITIONS.map(p => ({getraenkId: p.getraenkId, menge: p.menge, einheit: p.einheit}))
+  };
+
+  try {
+    const r = await apiCall('submitAusgabe', payload);
+    if (r.success) {
+      onAusgabeErfolg(name);
+    } else if (r.error === 'NICHT_GENUEGEND_BESTAND') {
+      const details = (r.details || []).map(d => `${d.name}: verfügbar ${d.verfuegbar}, benötigt ${d.benoetigt}`).join(' · ');
+      showToast('⚠️ Nicht genügend Bestand – ' + details, true);
+    } else {
+      showToast('Fehler: ' + (r.error || 'unbekannt'), true);
+    }
+  } catch (e) {
+    queueOffline(payload);
+    onAusgabeErfolg(name, true);
+  }
+}
+
+function onAusgabeErfolg(name, offline) {
+  const namen = JSON.parse(localStorage.getItem('rir_namen') || '[]');
+  if (!namen.includes(name)) { namen.unshift(name); localStorage.setItem('rir_namen', JSON.stringify(namen.slice(0, 30))); }
+  document.getElementById('ausgabe-name').value = '';
+  document.getElementById('budel-freitext').value = '';
+  document.querySelectorAll('#budel-choice button').forEach(x => x.classList.remove('selected'));
+  SELECTED_BUDEL = null;
+  POSITIONS = [];
+  renderPositions();
+  showToast(offline ? 'Kein Netz – Ausgabe wird automatisch nachgereicht, sobald wieder Verbindung besteht.' : 'Ausgabe gespeichert.');
+}
+
+/* =========================================================
+   OFFLINE-WARTESCHLANGE
+   ========================================================= */
+function queueOffline(payload) {
+  const q = JSON.parse(localStorage.getItem('rir_queue') || '[]');
+  q.push(payload);
+  localStorage.setItem('rir_queue', JSON.stringify(q));
+}
+
+async function flushOfflineQueue() {
+  let q = JSON.parse(localStorage.getItem('rir_queue') || '[]');
+  if (q.length === 0) return;
+  const remaining = [];
+  for (const payload of q) {
+    try {
+      const r = await apiCall('submitAusgabe', payload);
+      if (!r.success) remaining.push(payload); // z. B. Bestand inzwischen nicht mehr ausreichend – Admin muss das prüfen
+    } catch (e) {
+      remaining.push(payload);
+    }
+  }
+  localStorage.setItem('rir_queue', JSON.stringify(remaining));
+  if (q.length !== remaining.length) showToast((q.length - remaining.length) + ' zwischengespeicherte Ausgabe(n) übertragen.');
+}
+window.addEventListener('online', flushOfflineQueue);
+setInterval(flushOfflineQueue, 30000);
+
+/* =========================================================
+   BESTAND
+   ========================================================= */
+async function loadBestand() {
+  const wrap = document.getElementById('bestand-list');
+  wrap.innerHTML = '<p style="color:var(--text-dim);">Lade…</p>';
+  try {
+    const r = await apiCall('getBestand', {});
+    LAST_BESTAND = r.data || [];
+    wrap.innerHTML = LAST_BESTAND.map(b => {
+      const cls = b.status === 'rot' ? 'danger' : (b.status === 'orange' ? 'warn' : '');
+      const anzeige = (b.gebindeName && b.gebindeAnzahl !== null)
+        ? `${b.gebindeAnzahl} ${b.gebindeName} + ${b.restBasiseinheit} ${b.basiseinheit}`
+        : `${b.aktuellBasiseinheit} ${b.basiseinheit}`;
+      return `<div class="stock-card ${cls}">
+        <div><div>${escapeHtml(b.name)}</div><div class="sub">${escapeHtml(anzeige)}</div></div>
+        <div class="amt">${b.aktuellBasiseinheit}</div>
+      </div>`;
+    }).join('') || '<p style="color:var(--text-dim);">Keine Getränke angelegt.</p>';
+  } catch (e) {
+    wrap.innerHTML = '<p style="color:var(--danger);">Bestand konnte nicht geladen werden.</p>';
+  }
+}
+
+/* =========================================================
+   HISTORIE
+   ========================================================= */
+function renderFilterSelects() {
+  const bSel = document.getElementById('filter-budel');
+  bSel.innerHTML = '<option value="">Alle</option>' + BUDEL.map(b => `<option value="${b.ID}">${escapeHtml(b.Name)}</option>`).join('');
+  const gSel = document.getElementById('filter-getraenk');
+  gSel.innerHTML = '<option value="">Alle</option>' + GETRAENKE.map(g => `<option value="${g.ID}">${escapeHtml(g.Name)}</option>`).join('');
+}
+
+async function loadHistorie() {
+  const filters = {
+    datum: document.getElementById('filter-datum').value || undefined,
+    name: document.getElementById('filter-name').value || undefined,
+    budelId: document.getElementById('filter-budel').value || undefined,
+    getraenkId: document.getElementById('filter-getraenk').value || undefined
+  };
+  try {
+    const r = await apiCall('getHistorie', filters);
+    LAST_HISTORIE = r.data || [];
+    const tbody = document.querySelector('#historie-table tbody');
+    tbody.innerHTML = LAST_HISTORIE.map(h => `
+      <tr style="${String(h.storniert).toUpperCase()==='JA' ? 'opacity:0.4;text-decoration:line-through;' : ''}">
+        <td>${escapeHtml(h.zeitstempel || '')}</td>
+        <td>${escapeHtml(h.name || '')}</td>
+        <td>${escapeHtml(h.budel || '')}</td>
+        <td>${escapeHtml(h.getraenk || '')}</td>
+        <td>${escapeHtml(h.menge)} ${escapeHtml(h.einheit)}</td>
+        <td>${ROLE === 'admin' && String(h.storniert).toUpperCase() !== 'JA'
+          ? `<button class="btn" style="padding:6px 10px;font-size:12px;" onclick="adminKorrigieren('${h.positionId}','${h.ausgabeId}')">Korrigieren</button>
+             <button class="btn danger" style="padding:6px 10px;font-size:12px;" onclick="adminStornieren('${h.ausgabeId}')">Stornieren</button>` : ''}</td>
+      </tr>`).join('');
+  } catch (e) {
+    showToast('Historie konnte nicht geladen werden.', true);
+  }
+}
+
+async function adminStornieren(ausgabeId) {
+  const grund = prompt('Grund für die Stornierung?');
+  if (grund === null) return;
+  const r = await apiCall('stornoAusgabe', {ausgabeId, grund, durchgefuehrtVon: 'Admin'});
+  if (r.success) { showToast('Ausgabe storniert.'); loadHistorie(); } else showToast('Fehler: ' + r.error, true);
+}
+
+async function adminKorrigieren(positionId) {
+  const neueMenge = prompt('Neue Menge (in der ursprünglich verwendeten Einheit)?');
+  if (neueMenge === null || neueMenge === '') return;
+  const grund = prompt('Grund der Korrektur?') || '';
+  const r = await apiCall('addKorrektur', {positionId, neueMenge: Number(neueMenge), grund, durchgefuehrtVon: 'Admin'});
+  if (r.success) { showToast('Korrektur gespeichert.'); loadHistorie(); } else showToast('Fehler: ' + r.error, true);
+}
+
+/* =========================================================
+   ADMIN: GETRÄNKE
+   ========================================================= */
+function renderAdminGetraenkeList() {
+  const wrap = document.getElementById('getraenke-admin-list');
+  wrap.innerHTML = GETRAENKE.map(g => `
+    <div class="card" style="cursor:pointer;" onclick='editGetraenk(${JSON.stringify(g).replace(/'/g, "&#39;")})'>
+      <strong>${escapeHtml(g.Name)}</strong> <span style="color:var(--text-dim);">(${escapeHtml(String(g.Aktiv))})</span>
+    </div>`).join('');
+}
+
+function editGetraenk(g) {
+  document.getElementById('g-id').value = g.ID;
+  document.getElementById('g-name').value = g.Name;
+  document.getElementById('g-basis').value = g.Basiseinheit;
+  document.getElementById('g-gebinde').value = g.GebindeName || '';
+  document.getElementById('g-gebindefaktor').value = g.FlaschenProGebinde || '';
+  document.getElementById('g-verkauf').value = g.VerkaufseinheitName || '';
+  document.getElementById('g-verkaufvol').value = g.VolumenProVerkaufseinheitL || '';
+  document.getElementById('g-basisvol').value = g.VolumenProFlascheL || '';
+  document.getElementById('g-kritisch').value = g.KritischSchwelle || 0;
+  document.getElementById('g-niedrig').value = g.NiedrigSchwelle || 0;
+  document.getElementById('g-anfang').value = 0;
+  showAdminPane('admin-getraenke');
+}
+
+function resetGetraenkForm() {
+  ['g-id','g-name','g-basis','g-gebinde','g-gebindefaktor','g-verkauf','g-verkaufvol','g-basisvol'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('g-kritisch').value = 0;
+  document.getElementById('g-niedrig').value = 0;
+  document.getElementById('g-anfang').value = 0;
+}
+
+async function saveGetraenk() {
+  const id = document.getElementById('g-id').value;
+  const data = {
+    name: document.getElementById('g-name').value.trim(),
+    basiseinheit: document.getElementById('g-basis').value.trim(),
+    gebindeName: document.getElementById('g-gebinde').value.trim(),
+    flaschenProGebinde: document.getElementById('g-gebindefaktor').value,
+    verkaufseinheitName: document.getElementById('g-verkauf').value.trim(),
+    volumenProVerkaufseinheitL: document.getElementById('g-verkaufvol').value,
+    volumenProFlascheL: document.getElementById('g-basisvol').value,
+    kritischSchwelle: document.getElementById('g-kritisch').value,
+    niedrigSchwelle: document.getElementById('g-niedrig').value
+  };
+  if (!data.name || !data.basiseinheit) return showToast('Name und Basiseinheit sind Pflichtfelder.', true);
+  let r;
+  if (id) { data.getraenkId = id; r = await apiCall('updateGetraenk', data); }
+  else { data.anfangsbestand = document.getElementById('g-anfang').value; r = await apiCall('addGetraenk', data); }
+  if (r.success) { showToast('Gespeichert.'); resetGetraenkForm(); loadStammdaten(); } else showToast('Fehler: ' + r.error, true);
+}
+
+/* =========================================================
+   ADMIN: BUDEL
+   ========================================================= */
+function renderAdminBudelList() {
+  document.getElementById('budel-admin-list').innerHTML = BUDEL.map(b =>
+    `<div class="card">${escapeHtml(b.Name)} ${String(b.IstSonstigesTyp).toUpperCase()==='JA' ? '<span style="color:var(--text-dim);">(Sonstiges-Typ)</span>' : ''}</div>`
+  ).join('');
+}
+
+async function saveBudel() {
+  const name = document.getElementById('b-name').value.trim();
+  if (!name) return showToast('Bitte einen Namen eingeben.', true);
+  const istSonstiges = document.getElementById('b-sonstiges').checked;
+  const r = await apiCall('addBudel', {name, istSonstigesTyp: istSonstiges});
+  if (r.success) { showToast('Budel gespeichert.'); document.getElementById('b-name').value=''; loadStammdaten(); } else showToast('Fehler: ' + r.error, true);
+}
+
+/* =========================================================
+   ADMIN: NACHLIEFERUNG & VERKÄUFE
+   ========================================================= */
+async function submitNachlieferung() {
+  const getraenkId = document.getElementById('n-getraenk').value;
+  const menge = Number(document.getElementById('n-menge').value);
+  const einheit = document.getElementById('n-einheit').value;
+  const eingetragenVon = document.getElementById('n-von').value.trim();
+  if (!menge || menge <= 0) return showToast('Bitte eine Menge angeben.', true);
+  const r = await apiCall('addNachlieferung', {getraenkId, menge, einheit, eingetragenVon});
+  if (r.success) showToast('Nachlieferung gebucht. Neuer Bestand: ' + r.neuerBestand); else showToast('Fehler: ' + r.error, true);
+}
+
+async function submitVerkaufszahl() {
+  const getraenkId = document.getElementById('v-getraenk').value;
+  const tag = document.getElementById('v-tag').value.trim();
+  const verkaufteMenge = Number(document.getElementById('v-menge').value);
+  const einheit = document.getElementById('v-einheit').value;
+  if (!tag || !verkaufteMenge) return showToast('Bitte Tag und Menge angeben.', true);
+  const r = await apiCall('addVerkaufszahl', {getraenkId, tag, verkaufteMenge, einheit});
+  if (r.success) showToast('Verkaufszahl gespeichert.'); else showToast('Fehler: ' + r.error, true);
+}
+
+document.addEventListener('change', e => {
+  if (e.target.id === 'n-getraenk') updateUnitSelect('n-getraenk', 'n-einheit');
+  if (e.target.id === 'v-getraenk') updateUnitSelect('v-getraenk', 'v-einheit');
+});
+
+/* =========================================================
+   ADMIN: AUSWERTUNG
+   ========================================================= */
+async function loadAuswertung() {
+  const r = await apiCall('getAuswertung', {});
+  LAST_AUSWERTUNG = r.data || [];
+  document.querySelector('#auswertung-table tbody').innerHTML = LAST_AUSWERTUNG.map(a => `
+    <tr><td>${escapeHtml(a.name)}</td><td>${a.ausgegebenBasiseinheit}</td><td>${a.verkauftBasiseinheit}</td>
+    <td>${a.differenzBasiseinheit}</td><td>${a.differenzProzent}%</td></tr>`).join('');
+}
+
+/* =========================================================
+   CSV-EXPORT (rein im Browser, keine zusätzliche Serveranfrage)
+   ========================================================= */
+function downloadCsv(filename, rows) {
+  const csv = rows.map(r => r.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(';')).join('\n');
+  const blob = new Blob(['\uFEFF' + csv], {type: 'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+
+function exportHistorieCsv() {
+  const rows = [['Zeit','Name','Budel','Getränk','Menge','Einheit','Storniert']]
+    .concat(LAST_HISTORIE.map(h => [h.zeitstempel,h.name,h.budel,h.getraenk,h.menge,h.einheit,h.storniert]));
+  downloadCsv('historie.csv', rows);
+}
+function exportBestandCsv() {
+  const rows = [['Getränk','Aktuell (Basiseinheit)','Einheit','Status']]
+    .concat(LAST_BESTAND.map(b => [b.name,b.aktuellBasiseinheit,b.basiseinheit,b.status]));
+  downloadCsv('bestand.csv', rows);
+}
+function exportAuswertungCsv() {
+  const rows = [['Getränk','Ausgegeben','Verkauft','Differenz','Differenz %']]
+    .concat(LAST_AUSWERTUNG.map(a => [a.name,a.ausgegebenBasiseinheit,a.verkauftBasiseinheit,a.differenzBasiseinheit,a.differenzProzent]));
+  downloadCsv('auswertung.csv', rows);
+}
+
+/* =========================================================
+   START
+   ========================================================= */
+if (ROLE) { enterApp(); }
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('service-worker.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>
