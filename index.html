@@ -10,16 +10,17 @@
 <style>
   /* ====== DESIGN TOKENS ====== */
   :root{
-    --bg:#1B1815;
-    --panel:#262220;
-    --field:#322C27;
-    --text:#F3EFE7;
-    --text-dim:#A79C8D;
-    --accent:#F2A93B;
-    --accent-ink:#1B1815;
-    --danger:#E1503D;
-    --warn:#D98A34;
-    --good:#6FA96B;
+    --bg:#FAF6EE;
+    --panel:#FFFFFF;
+    --field:#F1EAD9;
+    --text:#241F1A;
+    --text-dim:#7C7266;
+    --accent:#E8791C;
+    --accent-ink:#FFFFFF;
+    --danger:#C6392E;
+    --warn:#B8791A;
+    --good:#3F7A45;
+    --border:#E7DDC9;
     --radius-lg:18px;
     --radius-sm:10px;
   }
@@ -51,18 +52,19 @@
   }
   .hero-btn small{display:block;font-size:14px;font-weight:600;opacity:0.75;margin-top:4px;}
 
-  .card{background:var(--panel);border-radius:var(--radius-sm);padding:16px;margin-bottom:12px;}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin-bottom:12px;
+    box-shadow:0 2px 8px rgba(60,45,20,0.05);}
   .card h3{font-size:15px;color:var(--text-dim);text-transform:none;}
 
   label{display:block;font-size:13px;color:var(--text-dim);margin:14px 0 6px 0;}
   input[type=text],input[type=number],input[type=date],select,textarea{
-    width:100%;background:var(--field);border:1px solid #453e37;color:var(--text);
+    width:100%;background:var(--field);border:1px solid var(--border);color:var(--text);
     border-radius:var(--radius-sm);padding:14px;font-size:17px;font-family:inherit;
   }
   input:focus,select:focus,button:focus{outline:2px solid var(--accent);outline-offset:2px;}
 
   .btn{
-    background:var(--field);color:var(--text);border:1px solid #453e37;border-radius:var(--radius-sm);
+    background:var(--field);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-sm);
     padding:14px 16px;font-size:16px;font-weight:700;cursor:pointer;
   }
   .btn.primary{background:var(--accent);color:var(--accent-ink);border:none;}
@@ -72,7 +74,7 @@
 
   .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
   .grid-choice button{width:100%;padding:16px;margin-bottom:8px;border-radius:var(--radius-sm);
-    border:1px solid #453e37;background:var(--field);color:var(--text);font-size:16px;font-weight:700;cursor:pointer;text-align:left;}
+    border:1px solid var(--border);background:var(--field);color:var(--text);font-size:16px;font-weight:700;cursor:pointer;text-align:left;}
   .grid-choice button.selected{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);}
 
   .pos-item{display:flex;justify-content:space-between;align-items:center;background:var(--field);
@@ -80,18 +82,19 @@
   .pos-item .remove{color:var(--danger);background:none;border:none;font-size:20px;cursor:pointer;}
 
   .stock-card{display:flex;justify-content:space-between;align-items:center;border-left:6px solid var(--good);
-    background:var(--panel);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:10px;}
+    background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:10px;
+    box-shadow:0 2px 8px rgba(60,45,20,0.05);}
   .stock-card.warn{border-left-color:var(--warn);}
   .stock-card.danger{border-left-color:var(--danger);}
   .stock-card .amt{font-size:22px;font-weight:900;font-family:"Arial Black","Helvetica Neue",Arial,sans-serif;}
   .stock-card .sub{font-size:13px;color:var(--text-dim);}
 
   table{width:100%;border-collapse:collapse;font-size:14px;}
-  th,td{text-align:left;padding:10px 6px;border-bottom:1px solid #3a332c;}
+  th,td{text-align:left;padding:10px 6px;border-bottom:1px solid var(--border);}
   th{color:var(--text-dim);font-weight:600;}
 
-  .navbar{position:fixed;bottom:0;left:0;right:0;background:var(--panel);border-top:1px solid #3a332c;
-    display:flex;max-width:640px;margin:0 auto;}
+  .navbar{position:fixed;bottom:0;left:0;right:0;background:var(--panel);border-top:1px solid var(--border);
+    display:flex;max-width:640px;margin:0 auto;box-shadow:0 -2px 10px rgba(60,45,20,0.06);}
   .navbar button{flex:1;background:none;border:none;color:var(--text-dim);padding:12px 4px 10px 4px;
     font-size:12px;font-weight:700;cursor:pointer;}
   .navbar button.active{color:var(--accent);}
@@ -112,6 +115,18 @@
   .admin-subnav button.active{background:var(--accent);color:var(--accent-ink);}
   .admin-pane{display:none;}
   .admin-pane.active{display:block;}
+
+  .confirm-overlay{position:fixed;inset:0;background:rgba(36,31,26,0.5);display:none;
+    align-items:center;justify-content:center;z-index:200;padding:24px;}
+  .confirm-overlay.show{display:flex;}
+  .confirm-card{background:#fff;border-radius:20px;padding:36px 28px;text-align:center;max-width:320px;width:100%;
+    box-shadow:0 16px 44px rgba(36,31,26,0.28);}
+  .confirm-icon{width:68px;height:68px;border-radius:50%;background:var(--good);color:#fff;font-size:34px;
+    display:flex;align-items:center;justify-content:center;margin:0 auto 16px auto;}
+  .confirm-icon.offline{background:var(--warn);}
+  .confirm-title{font-family:"Arial Black","Helvetica Neue",Arial,sans-serif;font-size:21px;font-weight:900;
+    margin-bottom:6px;color:var(--text);}
+  .confirm-sub{color:var(--text-dim);font-size:14px;line-height:1.4;}
 </style>
 </head>
 <body>
@@ -308,6 +323,14 @@
 </div>
 
 <div id="toast" class="toast"></div>
+
+<div id="confirm-overlay" class="confirm-overlay" onclick="hideConfirm()">
+  <div class="confirm-card">
+    <div class="confirm-icon" id="confirm-icon">✓</div>
+    <div class="confirm-title" id="confirm-title">Ausgabe gespeichert</div>
+    <div class="confirm-sub" id="confirm-sub"></div>
+  </div>
+</div>
 
 <script>
 /* =========================================================
@@ -507,10 +530,13 @@ async function submitAusgabe() {
     positionen: POSITIONS.map(p => ({getraenkId: p.getraenkId, menge: p.menge, einheit: p.einheit}))
   };
 
+  const summary = POSITIONS.map(p => `${p.menge} ${p.einheit} ${p.name}`).join(', ') +
+    ' · ' + SELECTED_BUDEL.Name + (budelFreitext ? ' (' + budelFreitext + ')' : '');
+
   try {
     const r = await apiCall('submitAusgabe', payload);
     if (r.success) {
-      onAusgabeErfolg(name);
+      onAusgabeErfolg(name, summary, false);
     } else if (r.error === 'NICHT_GENUEGEND_BESTAND') {
       const details = (r.details || []).map(d => `${d.name}: verfügbar ${d.verfuegbar}, benötigt ${d.benoetigt}`).join(' · ');
       showToast('⚠️ Nicht genügend Bestand – ' + details, true);
@@ -519,11 +545,11 @@ async function submitAusgabe() {
     }
   } catch (e) {
     queueOffline(payload);
-    onAusgabeErfolg(name, true);
+    onAusgabeErfolg(name, summary, true);
   }
 }
 
-function onAusgabeErfolg(name, offline) {
+function onAusgabeErfolg(name, summary, offline) {
   const namen = JSON.parse(localStorage.getItem('rir_namen') || '[]');
   if (!namen.includes(name)) { namen.unshift(name); localStorage.setItem('rir_namen', JSON.stringify(namen.slice(0, 30))); }
   document.getElementById('ausgabe-name').value = '';
@@ -532,8 +558,24 @@ function onAusgabeErfolg(name, offline) {
   SELECTED_BUDEL = null;
   POSITIONS = [];
   renderPositions();
-  showToast(offline ? 'Kein Netz – Ausgabe wird automatisch nachgereicht, sobald wieder Verbindung besteht.' : 'Ausgabe gespeichert.');
+  showConfirm(
+    offline ? 'Zwischengespeichert' : 'Ausgabe gespeichert',
+    (offline ? 'Kein Netz gerade – wird automatisch nachgereicht, sobald wieder Verbindung besteht.\n' : '') + summary,
+    offline
+  );
 }
+
+function showConfirm(title, sub, offline) {
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-sub').textContent = sub;
+  const icon = document.getElementById('confirm-icon');
+  icon.textContent = offline ? '⏳' : '✓';
+  icon.className = 'confirm-icon' + (offline ? ' offline' : '');
+  document.getElementById('confirm-overlay').classList.add('show');
+  clearTimeout(window._confirmTimer);
+  window._confirmTimer = setTimeout(hideConfirm, 2800);
+}
+function hideConfirm() { document.getElementById('confirm-overlay').classList.remove('show'); }
 
 /* =========================================================
    OFFLINE-WARTESCHLANGE
