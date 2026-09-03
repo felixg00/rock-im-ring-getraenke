@@ -40,8 +40,10 @@
     font-weight:900;
   }
   .app{max-width:640px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;}
-  .topbar{padding:18px 20px 10px 20px;}
-  .topbar h1{font-size:20px;color:var(--text-dim);font-weight:700;}
+  .topbar{padding:14px 20px 6px 20px;display:flex;justify-content:space-between;align-items:center;}
+  .topbar-logo{height:38px;display:block;}
+  .logout-btn{background:none;border:none;color:var(--text-dim);font-size:13px;font-weight:700;
+    text-decoration:underline;cursor:pointer;padding:6px;}
   .screen{flex:1;padding:0 16px 96px 16px;display:none;}
   .screen.active{display:block;}
 
@@ -108,6 +110,7 @@
   .login-wrap{display:flex;flex-direction:column;justify-content:center;min-height:100vh;padding:20px;}
   .login-wrap h1{font-size:30px;margin-bottom:2px;}
   .login-wrap p{color:var(--text-dim);margin-bottom:24px;}
+  .login-logo{max-width:240px;width:75%;display:block;margin:0 auto 4px auto;}
 
   .admin-subnav{display:flex;gap:8px;overflow-x:auto;margin:12px 0 16px 0;padding-bottom:4px;}
   .admin-subnav button{flex:none;background:var(--field);color:var(--text-dim);border:none;border-radius:20px;
@@ -133,18 +136,21 @@
 
 <!-- ============ LOGIN ============ -->
 <div id="screen-login" class="login-wrap">
-  <h1>Rock im Ring</h1>
+  <img src="logo-rir.png" alt="Rock im Ring" class="login-logo">
   <p>Getränkeverwaltung</p>
   <label for="pin-input">PIN eingeben</label>
   <input type="text" inputmode="numeric" id="pin-input" placeholder="••••">
   <div style="height:14px"></div>
-  <button class="btn primary" style="width:100%" onclick="doLogin()">Anmelden</button>
+  <button class="btn primary" style="width:100%" onclick="doLogin(this)">Anmelden</button>
   <div id="login-error" style="color:var(--danger);margin-top:12px;"></div>
 </div>
 
 <!-- ============ APP ============ -->
 <div class="app" id="app" style="display:none;">
-  <div class="topbar"><h1>Rock im Ring · Getränke</h1></div>
+  <div class="topbar">
+    <img src="logo-rir.png" alt="Rock im Ring" class="topbar-logo">
+    <button class="btn" style="padding:8px 12px;font-size:12px;" onclick="doLogout()">Abmelden</button>
+  </div>
 
   <!-- AUSGABE -->
   <div id="screen-ausgabe" class="screen">
@@ -173,7 +179,7 @@
 
     <div id="positions-list"></div>
 
-    <button class="hero-btn" onclick="submitAusgabe()">Ausgabe bestätigen
+    <button class="hero-btn" onclick="submitAusgabe(this)">Ausgabe bestätigen
       <small>Bestand wird sofort reduziert</small>
     </button>
   </div>
@@ -182,6 +188,8 @@
   <div id="screen-bestand" class="screen">
     <h2 style="margin:16px 0;">Aktueller Bestand</h2>
     <div id="bestand-list"></div>
+    <h3 style="margin:20px 0 10px 0;color:var(--text-dim);">Letzte Bestandskorrekturen</h3>
+    <div id="bestandskorrekturen-list"></div>
   </div>
 
   <!-- HISTORIE -->
@@ -197,7 +205,7 @@
         <div><label>Getränk</label><select id="filter-getraenk"><option value="">Alle</option></select></div>
       </div>
       <div style="height:10px"></div>
-      <button class="btn primary" style="width:100%" onclick="loadHistorie()">Filtern</button>
+      <button class="btn primary" style="width:100%" onclick="loadHistorie(this)">Filtern</button>
     </div>
     <div style="overflow-x:auto;">
       <table id="historie-table">
@@ -241,7 +249,7 @@
         <label>Anfangsbestand (nur beim Anlegen, in Basiseinheit)</label><input type="number" id="g-anfang" value="0">
         <div style="height:10px"></div>
         <div class="btn-row">
-          <button class="btn primary" onclick="saveGetraenk()">Speichern</button>
+          <button class="btn primary" onclick="saveGetraenk(this)">Speichern</button>
           <button class="btn" onclick="resetGetraenkForm()">Neues Getränk</button>
         </div>
       </div>
@@ -256,7 +264,7 @@
           <input type="checkbox" id="b-sonstiges" style="width:auto;"> Ist der "Sonstiges"-Bereich (mit Freitext)
         </label>
         <div style="height:10px"></div>
-        <button class="btn primary" style="width:100%" onclick="saveBudel()">Speichern</button>
+        <button class="btn primary" style="width:100%" onclick="saveBudel(this)">Speichern</button>
       </div>
       <div id="budel-admin-list"></div>
     </div>
@@ -271,7 +279,7 @@
         </div>
         <label>Eingetragen von</label><input type="text" id="n-von">
         <div style="height:10px"></div>
-        <button class="btn primary" style="width:100%" onclick="submitNachlieferung()">Nachlieferung buchen</button>
+        <button class="btn primary" style="width:100%" onclick="submitNachlieferung(this)">Nachlieferung buchen</button>
       </div>
     </div>
 
@@ -285,13 +293,13 @@
           <div><label>Einheit</label><select id="v-einheit"></select></div>
         </div>
         <div style="height:10px"></div>
-        <button class="btn primary" style="width:100%" onclick="submitVerkaufszahl()">Speichern</button>
+        <button class="btn primary" style="width:100%" onclick="submitVerkaufszahl(this)">Speichern</button>
       </div>
     </div>
 
     <div id="admin-auswertung" class="admin-pane">
       <div class="card">
-        <button class="btn primary" style="width:100%" onclick="loadAuswertung()">Auswertung laden</button>
+        <button class="btn primary" style="width:100%" onclick="loadAuswertung(this)">Auswertung laden</button>
       </div>
       <div style="overflow-x:auto;">
         <table id="auswertung-table">
@@ -316,7 +324,7 @@
 
   <div class="navbar">
     <button data-screen="ausgabe" onclick="showScreen('ausgabe')" class="active">Ausgabe</button>
-    <button data-screen="bestand" onclick="showScreen('bestand')">Bestand</button>
+    <button data-screen="bestand" id="nav-bestand" onclick="showScreen('bestand')" style="display:none;">Bestand</button>
     <button data-screen="historie" onclick="showScreen('historie')">Historie</button>
     <button data-screen="admin" id="nav-admin" onclick="showScreen('admin')" style="display:none;">Admin</button>
   </div>
@@ -336,7 +344,7 @@
 /* =========================================================
    KONFIGURATION – HIER DEINE APPS-SCRIPT-URL EINTRAGEN
    ========================================================= */
-const API_URL = "https://script.google.com/macros/s/AKfycbyAoz-XN2JLKZHLcJEneVUcGIn61d_yKBZBb8oUtnm6EJEZbFHRNO9FFWcf_RAm4KOYQQ/exec";
+const API_URL = "HIER_DEINE_WEB_APP_URL_EINFUEGEN";
 
 /* =========================================================
    STATE
@@ -373,32 +381,75 @@ function showToast(msg, isError) {
 }
 
 /* =========================================================
+   LADEZUSTAND & MEHRFACHKLICK-SCHUTZ (für alle Aktions-Buttons)
+   ========================================================= */
+async function runWithLoading(btn, loadingText, fn) {
+  if (!btn) { await fn(); return; }
+  if (btn.disabled) return; // schon in Bearbeitung – zweiten Klick ignorieren
+  const original = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = loadingText;
+  try {
+    await fn();
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = original;
+  }
+}
+
+function withAdminPin(obj) {
+  return Object.assign({}, obj || {}, { adminPin: localStorage.getItem('rir_pin') || '' });
+}
+
+/* =========================================================
    LOGIN
    ========================================================= */
-async function doLogin() {
+async function doLogin(btn) {
   const pin = document.getElementById('pin-input').value.trim();
   document.getElementById('login-error').textContent = '';
-  try {
-    const r = await apiCall('login', {pin});
-    if (r.success) {
-      ROLE = r.role;
-      localStorage.setItem('rir_role', ROLE);
-      enterApp();
-    } else {
-      document.getElementById('login-error').textContent = r.error || 'PIN ungültig';
+  await runWithLoading(btn, '⏳ Prüfe PIN...', async () => {
+    try {
+      const r = await apiCall('login', { pin });
+      if (r.success) {
+        ROLE = r.role;
+        localStorage.setItem('rir_role', ROLE);
+        localStorage.setItem('rir_pin', pin);
+        enterApp();
+      } else {
+        document.getElementById('login-error').textContent = r.error || 'PIN ungültig';
+      }
+    } catch (e) {
+      document.getElementById('login-error').textContent = 'Keine Verbindung zum Server. Ist die API-URL korrekt eingetragen und besteht Internet?';
     }
-  } catch (e) {
-    document.getElementById('login-error').textContent = 'Keine Verbindung zum Server. Ist die API-URL korrekt eingetragen und besteht Internet?';
-  }
+  });
 }
 
 function enterApp() {
   document.getElementById('screen-login').style.display = 'none';
   document.getElementById('app').style.display = 'block';
-  if (ROLE === 'admin') document.getElementById('nav-admin').style.display = 'block';
+  if (ROLE === 'admin') {
+    document.getElementById('nav-admin').style.display = 'block';
+    document.getElementById('nav-bestand').style.display = 'block';
+  }
   loadStammdaten();
   showScreen('ausgabe');
   flushOfflineQueue();
+}
+
+function doLogout() {
+  if ((JSON.parse(localStorage.getItem('rir_queue') || '[]')).length > 0) {
+    if (!confirm('Es gibt noch nicht übertragene Ausgaben (kein Netz). Trotzdem abmelden? Sie werden beim nächsten Login automatisch nachgereicht.')) return;
+  }
+  localStorage.removeItem('rir_role');
+  localStorage.removeItem('rir_pin');
+  ROLE = null;
+  POSITIONS = [];
+  SELECTED_BUDEL = null;
+  document.getElementById('pin-input').value = '';
+  document.getElementById('nav-admin').style.display = 'none';
+  document.getElementById('nav-bestand').style.display = 'none';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('screen-login').style.display = 'flex';
 }
 
 /* =========================================================
@@ -516,7 +567,7 @@ function renderPositions() {
 
 function removePosition(i) { POSITIONS.splice(i, 1); renderPositions(); }
 
-async function submitAusgabe() {
+async function submitAusgabe(btn) {
   const name = document.getElementById('ausgabe-name').value.trim();
   if (!name) return showToast('Bitte einen Namen eingeben.', true);
   if (!SELECTED_BUDEL) return showToast('Bitte einen Budel auswählen.', true);
@@ -533,20 +584,22 @@ async function submitAusgabe() {
   const summary = POSITIONS.map(p => `${p.menge} ${p.einheit} ${p.name}`).join(', ') +
     ' · ' + SELECTED_BUDEL.Name + (budelFreitext ? ' (' + budelFreitext + ')' : '');
 
-  try {
-    const r = await apiCall('submitAusgabe', payload);
-    if (r.success) {
-      onAusgabeErfolg(name, summary, false);
-    } else if (r.error === 'NICHT_GENUEGEND_BESTAND') {
-      const details = (r.details || []).map(d => `${d.name}: verfügbar ${d.verfuegbar}, benötigt ${d.benoetigt}`).join(' · ');
-      showToast('⚠️ Nicht genügend Bestand – ' + details, true);
-    } else {
-      showToast('Fehler: ' + (r.error || 'unbekannt'), true);
+  await runWithLoading(btn, '⏳ Wird ausgegeben...', async () => {
+    try {
+      const r = await apiCall('submitAusgabe', payload);
+      if (r.success) {
+        onAusgabeErfolg(name, summary, false);
+      } else if (r.error === 'NICHT_GENUEGEND_BESTAND') {
+        const details = (r.details || []).map(d => `${d.name}: verfügbar ${d.verfuegbar}, benötigt ${d.benoetigt}`).join(' · ');
+        showToast('⚠️ Nicht genügend Bestand – ' + details, true);
+      } else {
+        showToast('Fehler: ' + (r.error || 'unbekannt'), true);
+      }
+    } catch (e) {
+      queueOffline(payload);
+      onAusgabeErfolg(name, summary, true);
     }
-  } catch (e) {
-    queueOffline(payload);
-    onAusgabeErfolg(name, summary, true);
-  }
+  });
 }
 
 function onAusgabeErfolg(name, summary, offline) {
@@ -611,21 +664,67 @@ async function loadBestand() {
   const wrap = document.getElementById('bestand-list');
   wrap.innerHTML = '<p style="color:var(--text-dim);">Lade…</p>';
   try {
-    const r = await apiCall('getBestand', {});
+    const r = await apiCall('getBestand', withAdminPin({}));
+    if (!r.success) { wrap.innerHTML = '<p style="color:var(--danger);">' + escapeHtml(r.error || 'Zugriff verweigert.') + '</p>'; return; }
     LAST_BESTAND = r.data || [];
     wrap.innerHTML = LAST_BESTAND.map(b => {
       const cls = b.status === 'rot' ? 'danger' : (b.status === 'orange' ? 'warn' : '');
+      const warnLabel = b.status === 'rot' ? '🔴 Bestand sehr niedrig' : (b.status === 'orange' ? '🟠 Bestand kritisch' : '');
       const anzeige = (b.gebindeName && b.gebindeAnzahl !== null)
         ? `${b.gebindeAnzahl} ${b.gebindeName} + ${b.restBasiseinheit} ${b.basiseinheit}`
         : `${b.aktuellBasiseinheit} ${b.basiseinheit}`;
       return `<div class="stock-card ${cls}">
-        <div><div>${escapeHtml(b.name)}</div><div class="sub">${escapeHtml(anzeige)}</div></div>
-        <div class="amt">${b.aktuellBasiseinheit}</div>
+        <div>
+          <div>${escapeHtml(b.name)}</div>
+          <div class="sub">${escapeHtml(anzeige)}${warnLabel ? ' · ' + warnLabel : ''}</div>
+        </div>
+        <div style="text-align:right;">
+          <div class="amt">${b.aktuellBasiseinheit} <span style="font-size:13px;font-weight:600;color:var(--text-dim);">${escapeHtml(b.basiseinheit)}</span></div>
+          <button class="btn" style="padding:6px 10px;font-size:12px;margin-top:6px;"
+            onclick="adjustBestandUI(this,'${b.getraenkId}',${b.aktuellBasiseinheit},'${escapeHtml(b.name).replace(/'/g, "&#39;")}')">Korrigieren</button>
+        </div>
       </div>`;
     }).join('') || '<p style="color:var(--text-dim);">Keine Getränke angelegt.</p>';
   } catch (e) {
     wrap.innerHTML = '<p style="color:var(--danger);">Bestand konnte nicht geladen werden.</p>';
   }
+  loadBestandskorrekturen();
+}
+
+async function adjustBestandUI(btn, getraenkId, aktuellerBestand, name) {
+  const eingabe = prompt('Tatsächlich gezählten Bestand für "' + name + '" eingeben (aktuell im System: ' + aktuellerBestand + '):');
+  if (eingabe === null || eingabe === '' || isNaN(Number(eingabe))) return;
+  const neuerBestand = Number(eingabe);
+  const ok = confirm(
+    '⚠️ Achtung: Durch diese Änderung wird der aktuelle Bestand manuell angepasst.\n' +
+    'Bitte nur durchführen, wenn der tatsächliche Bestand kontrolliert wurde.\n\n' +
+    name + ': ' + aktuellerBestand + ' → ' + neuerBestand + '\n\nJetzt übernehmen?'
+  );
+  if (!ok) return;
+  const grund = prompt('Grund/Notiz (z. B. "Inventur"):') || '';
+  await runWithLoading(btn, '⏳ Wird gespeichert...', async () => {
+    const r = await apiCall('adjustBestand', withAdminPin({ getraenkId, neuerBestand, grund, durchgefuehrtVon: 'Admin' }));
+    if (r.success) { showToast('Bestand angepasst: ' + r.altBestand + ' → ' + r.neuerBestand); loadBestand(); }
+    else showToast('Fehler: ' + r.error, true);
+  });
+}
+
+async function loadBestandskorrekturen() {
+  const wrap = document.getElementById('bestandskorrekturen-list');
+  try {
+    const r = await apiCall('getBestandskorrekturen', withAdminPin({}));
+    const rows = (r.data || []).slice(0, 15);
+    wrap.innerHTML = rows.map(k => `
+      <div class="card" style="padding:12px 14px;">
+        <div style="display:flex;justify-content:space-between;">
+          <strong>${escapeHtml(k.getraenk)}</strong>
+          <span style="color:var(--text-dim);font-size:13px;">${escapeHtml(k.zeitstempel)}</span>
+        </div>
+        <div class="sub" style="color:var(--text-dim);font-size:13px;">
+          ${k.altBestand} → ${k.neuBestand} (${k.differenz > 0 ? '+' : ''}${k.differenz})${k.grund ? ' · ' + escapeHtml(k.grund) : ''}
+        </div>
+      </div>`).join('') || '<p style="color:var(--text-dim);font-size:14px;">Noch keine manuellen Korrekturen.</p>';
+  } catch (e) { /* still, kein Abbruch der Bestandsansicht */ }
 }
 
 /* =========================================================
@@ -638,46 +737,52 @@ function renderFilterSelects() {
   gSel.innerHTML = '<option value="">Alle</option>' + GETRAENKE.map(g => `<option value="${g.ID}">${escapeHtml(g.Name)}</option>`).join('');
 }
 
-async function loadHistorie() {
+async function loadHistorie(btn) {
   const filters = {
     datum: document.getElementById('filter-datum').value || undefined,
     name: document.getElementById('filter-name').value || undefined,
     budelId: document.getElementById('filter-budel').value || undefined,
     getraenkId: document.getElementById('filter-getraenk').value || undefined
   };
-  try {
-    const r = await apiCall('getHistorie', filters);
-    LAST_HISTORIE = r.data || [];
-    const tbody = document.querySelector('#historie-table tbody');
-    tbody.innerHTML = LAST_HISTORIE.map(h => `
-      <tr style="${String(h.storniert).toUpperCase()==='JA' ? 'opacity:0.4;text-decoration:line-through;' : ''}">
-        <td>${escapeHtml(h.zeitstempel || '')}</td>
-        <td>${escapeHtml(h.name || '')}</td>
-        <td>${escapeHtml(h.budel || '')}</td>
-        <td>${escapeHtml(h.getraenk || '')}</td>
-        <td>${escapeHtml(h.menge)} ${escapeHtml(h.einheit)}</td>
-        <td>${ROLE === 'admin' && String(h.storniert).toUpperCase() !== 'JA'
-          ? `<button class="btn" style="padding:6px 10px;font-size:12px;" onclick="adminKorrigieren('${h.positionId}','${h.ausgabeId}')">Korrigieren</button>
-             <button class="btn danger" style="padding:6px 10px;font-size:12px;" onclick="adminStornieren('${h.ausgabeId}')">Stornieren</button>` : ''}</td>
-      </tr>`).join('');
-  } catch (e) {
-    showToast('Historie konnte nicht geladen werden.', true);
-  }
+  await runWithLoading(btn, '⏳ Filtert...', async () => {
+    try {
+      const r = await apiCall('getHistorie', filters);
+      LAST_HISTORIE = r.data || [];
+      const tbody = document.querySelector('#historie-table tbody');
+      tbody.innerHTML = LAST_HISTORIE.map(h => `
+        <tr style="${String(h.storniert).toUpperCase()==='JA' ? 'opacity:0.4;text-decoration:line-through;' : ''}">
+          <td>${escapeHtml(h.zeitstempel || '')}</td>
+          <td>${escapeHtml(h.name || '')}</td>
+          <td>${escapeHtml(h.budel || '')}</td>
+          <td>${escapeHtml(h.getraenk || '')}</td>
+          <td>${escapeHtml(h.menge)} ${escapeHtml(h.einheit)}</td>
+          <td>${ROLE === 'admin' && String(h.storniert).toUpperCase() !== 'JA'
+            ? `<button class="btn" style="padding:6px 10px;font-size:12px;" onclick="adminKorrigieren(this,'${h.positionId}')">Korrigieren</button>
+               <button class="btn danger" style="padding:6px 10px;font-size:12px;" onclick="adminStornieren(this,'${h.ausgabeId}')">Stornieren</button>` : ''}</td>
+        </tr>`).join('');
+    } catch (e) {
+      showToast('Historie konnte nicht geladen werden.', true);
+    }
+  });
 }
 
-async function adminStornieren(ausgabeId) {
+async function adminStornieren(btn, ausgabeId) {
   const grund = prompt('Grund für die Stornierung?');
   if (grund === null) return;
-  const r = await apiCall('stornoAusgabe', {ausgabeId, grund, durchgefuehrtVon: 'Admin'});
-  if (r.success) { showToast('Ausgabe storniert.'); loadHistorie(); } else showToast('Fehler: ' + r.error, true);
+  await runWithLoading(btn, '⏳...', async () => {
+    const r = await apiCall('stornoAusgabe', withAdminPin({ ausgabeId, grund, durchgefuehrtVon: 'Admin' }));
+    if (r.success) { showToast('Ausgabe storniert.'); loadHistorie(); } else showToast('Fehler: ' + r.error, true);
+  });
 }
 
-async function adminKorrigieren(positionId) {
+async function adminKorrigieren(btn, positionId) {
   const neueMenge = prompt('Neue Menge (in der ursprünglich verwendeten Einheit)?');
   if (neueMenge === null || neueMenge === '') return;
   const grund = prompt('Grund der Korrektur?') || '';
-  const r = await apiCall('addKorrektur', {positionId, neueMenge: Number(neueMenge), grund, durchgefuehrtVon: 'Admin'});
-  if (r.success) { showToast('Korrektur gespeichert.'); loadHistorie(); } else showToast('Fehler: ' + r.error, true);
+  await runWithLoading(btn, '⏳...', async () => {
+    const r = await apiCall('addKorrektur', withAdminPin({ positionId, neueMenge: Number(neueMenge), grund, durchgefuehrtVon: 'Admin' }));
+    if (r.success) { showToast('Korrektur gespeichert.'); loadHistorie(); } else showToast('Fehler: ' + r.error, true);
+  });
 }
 
 /* =========================================================
@@ -713,7 +818,7 @@ function resetGetraenkForm() {
   document.getElementById('g-anfang').value = 0;
 }
 
-async function saveGetraenk() {
+async function saveGetraenk(btn) {
   const id = document.getElementById('g-id').value;
   const data = {
     name: document.getElementById('g-name').value.trim(),
@@ -727,10 +832,12 @@ async function saveGetraenk() {
     niedrigSchwelle: document.getElementById('g-niedrig').value
   };
   if (!data.name || !data.basiseinheit) return showToast('Name und Basiseinheit sind Pflichtfelder.', true);
-  let r;
-  if (id) { data.getraenkId = id; r = await apiCall('updateGetraenk', data); }
-  else { data.anfangsbestand = document.getElementById('g-anfang').value; r = await apiCall('addGetraenk', data); }
-  if (r.success) { showToast('Gespeichert.'); resetGetraenkForm(); loadStammdaten(); } else showToast('Fehler: ' + r.error, true);
+  await runWithLoading(btn, '⏳ Wird gespeichert...', async () => {
+    let r;
+    if (id) { data.getraenkId = id; r = await apiCall('updateGetraenk', withAdminPin(data)); }
+    else { data.anfangsbestand = document.getElementById('g-anfang').value; r = await apiCall('addGetraenk', withAdminPin(data)); }
+    if (r.success) { showToast('Gespeichert.'); resetGetraenkForm(); loadStammdaten(); } else showToast('Fehler: ' + r.error, true);
+  });
 }
 
 /* =========================================================
@@ -742,35 +849,41 @@ function renderAdminBudelList() {
   ).join('');
 }
 
-async function saveBudel() {
+async function saveBudel(btn) {
   const name = document.getElementById('b-name').value.trim();
   if (!name) return showToast('Bitte einen Namen eingeben.', true);
   const istSonstiges = document.getElementById('b-sonstiges').checked;
-  const r = await apiCall('addBudel', {name, istSonstigesTyp: istSonstiges});
-  if (r.success) { showToast('Budel gespeichert.'); document.getElementById('b-name').value=''; loadStammdaten(); } else showToast('Fehler: ' + r.error, true);
+  await runWithLoading(btn, '⏳ Wird gespeichert...', async () => {
+    const r = await apiCall('addBudel', withAdminPin({name, istSonstigesTyp: istSonstiges}));
+    if (r.success) { showToast('Budel gespeichert.'); document.getElementById('b-name').value=''; loadStammdaten(); } else showToast('Fehler: ' + r.error, true);
+  });
 }
 
 /* =========================================================
    ADMIN: NACHLIEFERUNG & VERKÄUFE
    ========================================================= */
-async function submitNachlieferung() {
+async function submitNachlieferung(btn) {
   const getraenkId = document.getElementById('n-getraenk').value;
   const menge = Number(document.getElementById('n-menge').value);
   const einheit = document.getElementById('n-einheit').value;
   const eingetragenVon = document.getElementById('n-von').value.trim();
   if (!menge || menge <= 0) return showToast('Bitte eine Menge angeben.', true);
-  const r = await apiCall('addNachlieferung', {getraenkId, menge, einheit, eingetragenVon});
-  if (r.success) showToast('Nachlieferung gebucht. Neuer Bestand: ' + r.neuerBestand); else showToast('Fehler: ' + r.error, true);
+  await runWithLoading(btn, '⏳ Wird gebucht...', async () => {
+    const r = await apiCall('addNachlieferung', withAdminPin({getraenkId, menge, einheit, eingetragenVon}));
+    if (r.success) showToast('Nachlieferung gebucht. Neuer Bestand: ' + r.neuerBestand); else showToast('Fehler: ' + r.error, true);
+  });
 }
 
-async function submitVerkaufszahl() {
+async function submitVerkaufszahl(btn) {
   const getraenkId = document.getElementById('v-getraenk').value;
   const tag = document.getElementById('v-tag').value.trim();
   const verkaufteMenge = Number(document.getElementById('v-menge').value);
   const einheit = document.getElementById('v-einheit').value;
   if (!tag || !verkaufteMenge) return showToast('Bitte Tag und Menge angeben.', true);
-  const r = await apiCall('addVerkaufszahl', {getraenkId, tag, verkaufteMenge, einheit});
-  if (r.success) showToast('Verkaufszahl gespeichert.'); else showToast('Fehler: ' + r.error, true);
+  await runWithLoading(btn, '⏳ Wird gespeichert...', async () => {
+    const r = await apiCall('addVerkaufszahl', withAdminPin({getraenkId, tag, verkaufteMenge, einheit}));
+    if (r.success) showToast('Verkaufszahl gespeichert.'); else showToast('Fehler: ' + r.error, true);
+  });
 }
 
 document.addEventListener('change', e => {
@@ -781,12 +894,15 @@ document.addEventListener('change', e => {
 /* =========================================================
    ADMIN: AUSWERTUNG
    ========================================================= */
-async function loadAuswertung() {
-  const r = await apiCall('getAuswertung', {});
-  LAST_AUSWERTUNG = r.data || [];
-  document.querySelector('#auswertung-table tbody').innerHTML = LAST_AUSWERTUNG.map(a => `
-    <tr><td>${escapeHtml(a.name)}</td><td>${a.ausgegebenBasiseinheit}</td><td>${a.verkauftBasiseinheit}</td>
-    <td>${a.differenzBasiseinheit}</td><td>${a.differenzProzent}%</td></tr>`).join('');
+async function loadAuswertung(btn) {
+  await runWithLoading(btn, '⏳ Wird geladen...', async () => {
+    const r = await apiCall('getAuswertung', withAdminPin({}));
+    if (!r.success) { showToast('Fehler: ' + r.error, true); return; }
+    LAST_AUSWERTUNG = r.data || [];
+    document.querySelector('#auswertung-table tbody').innerHTML = LAST_AUSWERTUNG.map(a => `
+      <tr><td>${escapeHtml(a.name)}</td><td>${a.ausgegebenBasiseinheit}</td><td>${a.verkauftBasiseinheit}</td>
+      <td>${a.differenzBasiseinheit}</td><td>${a.differenzProzent}%</td></tr>`).join('');
+  });
 }
 
 /* =========================================================
