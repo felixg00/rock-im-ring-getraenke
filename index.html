@@ -184,6 +184,47 @@
     </button>
   </div>
 
+  <!-- NACHSCHUB (Nachlieferung + Rückgabe – für Mitarbeiter und Admin) -->
+  <div id="screen-nachschub" class="screen">
+    <h2 style="margin:16px 0;">Nachschub</h2>
+
+    <div class="card">
+      <h3>Nachlieferung eintragen</h3>
+      <label>Getränk</label><select id="ns-n-getraenk"></select>
+      <div class="grid-2">
+        <div><label>Menge</label><input type="number" id="ns-n-menge" value="1"></div>
+        <div><label>Einheit</label><select id="ns-n-einheit"></select></div>
+      </div>
+      <label>Eingetragen von</label><input type="text" id="ns-n-von">
+      <div style="height:10px"></div>
+      <button class="btn primary" style="width:100%" onclick="submitNachlieferungShared(this)">Nachlieferung buchen</button>
+    </div>
+
+    <div class="card">
+      <h3>Rückgabe erfassen</h3>
+      <label>Wer bringt zurück?</label>
+      <input type="text" id="rt-name" placeholder="Name eingeben">
+      <label>Von welchem Budel?</label>
+      <div id="rt-budel-choice" class="grid-choice"></div>
+      <div id="rt-budel-freitext-wrap" style="display:none;">
+        <label>Welcher Bereich?</label>
+        <input type="text" id="rt-budel-freitext" placeholder="z. B. Backstage, VIP, Crew">
+      </div>
+      <label>Getränk</label>
+      <select id="rt-pos-getraenk"></select>
+      <div class="grid-2">
+        <div><label>Menge</label><input type="number" id="rt-pos-menge" value="1"></div>
+        <div><label>Einheit</label><select id="rt-pos-einheit"></select></div>
+      </div>
+      <div style="height:10px"></div>
+      <button class="btn" style="width:100%" onclick="addRetourePosition()">+ Getränk hinzufügen</button>
+      <div id="rt-positions-list" style="margin-top:10px;"></div>
+      <div style="height:10px"></div>
+      <button class="btn primary" style="width:100%" onclick="submitRetoure(this)">Rückgabe bestätigen</button>
+      <p style="color:var(--text-dim);font-size:12px;margin-top:8px;">Hinweis: Anders als bei der Ausgabe gibt es hier noch keine Offline-Warteschlange – dafür wird kurz Internet benötigt.</p>
+    </div>
+  </div>
+
   <!-- BESTAND -->
   <div id="screen-bestand" class="screen">
     <h2 style="margin:16px 0;">Aktueller Bestand</h2>
@@ -221,7 +262,6 @@
     <div class="admin-subnav">
       <button data-pane="admin-getraenke" onclick="showAdminPane('admin-getraenke')" class="active">Getränke</button>
       <button data-pane="admin-budel" onclick="showAdminPane('admin-budel')">Budel</button>
-      <button data-pane="admin-nachlieferung" onclick="showAdminPane('admin-nachlieferung')">Nachschub</button>
       <button data-pane="admin-verkauf" onclick="showAdminPane('admin-verkauf')">Verkäufe</button>
       <button data-pane="admin-auswertung" onclick="showAdminPane('admin-auswertung')">Auswertung</button>
       <button data-pane="admin-export" onclick="showAdminPane('admin-export')">Export</button>
@@ -269,23 +309,10 @@
       <div id="budel-admin-list"></div>
     </div>
 
-    <div id="admin-nachlieferung" class="admin-pane">
-      <div class="card">
-        <h3>Nachlieferung eintragen</h3>
-        <label>Getränk</label><select id="n-getraenk"></select>
-        <div class="grid-2">
-          <div><label>Menge</label><input type="number" id="n-menge" value="1"></div>
-          <div><label>Einheit</label><select id="n-einheit"></select></div>
-        </div>
-        <label>Eingetragen von</label><input type="text" id="n-von">
-        <div style="height:10px"></div>
-        <button class="btn primary" style="width:100%" onclick="submitNachlieferung(this)">Nachlieferung buchen</button>
-      </div>
-    </div>
-
     <div id="admin-verkauf" class="admin-pane">
       <div class="card">
         <h3>Verkaufszahl eintragen</h3>
+        <label>Budel</label><select id="v-budel"></select>
         <label>Getränk</label><select id="v-getraenk"></select>
         <label>Tag</label><input type="text" id="v-tag" placeholder="z. B. Freitag">
         <div class="grid-2">
@@ -300,13 +327,16 @@
     <div id="admin-auswertung" class="admin-pane">
       <div class="card">
         <button class="btn primary" style="width:100%" onclick="loadAuswertung(this)">Auswertung laden</button>
+        <div id="auswertung-warnungen" style="margin-top:10px;"></div>
       </div>
+      <h3 style="color:var(--text-dim);margin:14px 0 8px 0;">Gesamt (alle Budel)</h3>
       <div style="overflow-x:auto;">
         <table id="auswertung-table">
-          <thead><tr><th>Getränk</th><th>Ausgegeben</th><th>Verkauft</th><th>Diff.</th><th>Diff. %</th></tr></thead>
+          <thead><tr><th>Getränk</th><th>Ausgabe</th><th>Rückgabe</th><th>Netto</th><th>Verkauf</th><th>Diff.</th><th>Diff. %</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
+      <div id="auswertung-pro-budel"></div>
     </div>
 
     <div id="admin-export" class="admin-pane">
@@ -324,6 +354,7 @@
 
   <div class="navbar">
     <button data-screen="ausgabe" onclick="showScreen('ausgabe')" class="active">Ausgabe</button>
+    <button data-screen="nachschub" onclick="showScreen('nachschub')">Nachschub</button>
     <button data-screen="bestand" id="nav-bestand" onclick="showScreen('bestand')" style="display:none;">Bestand</button>
     <button data-screen="historie" onclick="showScreen('historie')">Historie</button>
     <button data-screen="admin" id="nav-admin" onclick="showScreen('admin')" style="display:none;">Admin</button>
@@ -354,6 +385,8 @@ let GETRAENKE = [];
 let BUDEL = [];
 let POSITIONS = [];
 let SELECTED_BUDEL = null;
+let RETOURE_POSITIONS = [];
+let RETOURE_SELECTED_BUDEL = null;
 let LAST_HISTORIE = [];
 let LAST_BESTAND = [];
 let LAST_AUSWERTUNG = [];
@@ -485,13 +518,20 @@ async function loadStammdaten() {
     renderBudelChoice();
     renderGetraenkSelect();
     renderFilterSelects();
+
+    // Nachschub (Nachlieferung + Rückgabe) – für alle Rollen
+    renderSelect('ns-n-getraenk', GETRAENKE, g => g.ID, g => g.Name);
+    updateUnitSelect('ns-n-getraenk', 'ns-n-einheit');
+    renderSelect('rt-pos-getraenk', GETRAENKE, g => g.ID, g => g.Name);
+    updateUnitSelect('rt-pos-getraenk', 'rt-pos-einheit');
+    renderRetoureBudelChoice();
+
     if (ROLE === 'admin') {
       renderAdminGetraenkeList();
       renderAdminBudelList();
-      renderSelect('n-getraenk', GETRAENKE, g => g.ID, g => g.Name);
       renderSelect('v-getraenk', GETRAENKE, g => g.ID, g => g.Name);
-      updateUnitSelect('n-getraenk', 'n-einheit');
       updateUnitSelect('v-getraenk', 'v-einheit');
+      renderSelect('v-budel', BUDEL, b => b.ID, b => b.Name);
     }
     const namen = JSON.parse(localStorage.getItem('rir_namen') || '[]');
     document.getElementById('name-vorschlaege').innerHTML = namen.map(n => `<option value="${escapeHtml(n)}">`).join('');
@@ -790,10 +830,20 @@ async function adminKorrigieren(btn, positionId) {
    ========================================================= */
 function renderAdminGetraenkeList() {
   const wrap = document.getElementById('getraenke-admin-list');
-  wrap.innerHTML = GETRAENKE.map(g => `
-    <div class="card" style="cursor:pointer;" onclick='editGetraenk(${JSON.stringify(g).replace(/'/g, "&#39;")})'>
-      <strong>${escapeHtml(g.Name)}</strong> <span style="color:var(--text-dim);">(${escapeHtml(String(g.Aktiv))})</span>
-    </div>`).join('');
+  wrap.innerHTML = GETRAENKE.map(g => {
+    const gebinde = g.GebindeName ? `${escapeHtml(g.GebindeName)} = ${g.FlaschenProGebinde} × ${escapeHtml(g.Basiseinheit)}` : '—';
+    const verkauf = g.VerkaufseinheitName ? `${escapeHtml(g.VerkaufseinheitName)} (${g.VolumenProVerkaufseinheitL} L)` : '—';
+    const basisvol = g.VolumenProFlascheL ? ` · ${escapeHtml(g.Basiseinheit)} = ${g.VolumenProFlascheL} L` : '';
+    return `<div class="card" style="cursor:pointer;" onclick='editGetraenk(${JSON.stringify(g).replace(/'/g, "&#39;")})'>
+      <div style="display:flex;justify-content:space-between;">
+        <strong>${escapeHtml(g.Name)}</strong>
+        <span style="color:var(--text-dim);font-size:12px;">${String(g.Aktiv).toUpperCase()==='JA' ? 'aktiv' : 'inaktiv'}</span>
+      </div>
+      <div class="sub" style="color:var(--text-dim);font-size:13px;margin-top:4px;">
+        Basiseinheit: ${escapeHtml(g.Basiseinheit)}${basisvol} · Gebinde: ${gebinde} · Verkaufseinheit: ${verkauf}
+      </div>
+    </div>`;
+  }).join('');
 }
 
 function editGetraenk(g) {
@@ -860,34 +910,117 @@ async function saveBudel(btn) {
 }
 
 /* =========================================================
-   ADMIN: NACHLIEFERUNG & VERKÄUFE
+   NACHSCHUB: NACHLIEFERUNG (für alle Rollen)
    ========================================================= */
-async function submitNachlieferung(btn) {
-  const getraenkId = document.getElementById('n-getraenk').value;
-  const menge = Number(document.getElementById('n-menge').value);
-  const einheit = document.getElementById('n-einheit').value;
-  const eingetragenVon = document.getElementById('n-von').value.trim();
+async function submitNachlieferungShared(btn) {
+  const getraenkId = document.getElementById('ns-n-getraenk').value;
+  const menge = Number(document.getElementById('ns-n-menge').value);
+  const einheit = document.getElementById('ns-n-einheit').value;
+  const eingetragenVon = document.getElementById('ns-n-von').value.trim();
   if (!menge || menge <= 0) return showToast('Bitte eine Menge angeben.', true);
   await runWithLoading(btn, '⏳ Wird gebucht...', async () => {
-    const r = await apiCall('addNachlieferung', withAdminPin({getraenkId, menge, einheit, eingetragenVon}));
-    if (r.success) showToast('Nachlieferung gebucht. Neuer Bestand: ' + r.neuerBestand); else showToast('Fehler: ' + r.error, true);
+    try {
+      const r = await apiCall('addNachlieferung', {getraenkId, menge, einheit, eingetragenVon});
+      if (r.success) { showToast('Nachlieferung gebucht. Neuer Bestand: ' + r.neuerBestand); document.getElementById('ns-n-von').value=''; }
+      else showToast('Fehler: ' + r.error, true);
+    } catch (e) { showToast('Keine Verbindung – bitte erneut versuchen.', true); }
   });
 }
 
+/* =========================================================
+   NACHSCHUB: RÜCKGABE (für alle Rollen)
+   ========================================================= */
+function renderRetoureBudelChoice() {
+  const wrap = document.getElementById('rt-budel-choice');
+  wrap.innerHTML = '';
+  BUDEL.forEach(b => {
+    const btn = document.createElement('button');
+    btn.textContent = b.Name;
+    btn.onclick = () => selectRetoureBudel(b, btn);
+    wrap.appendChild(btn);
+  });
+}
+
+function selectRetoureBudel(b, btnEl) {
+  RETOURE_SELECTED_BUDEL = b;
+  document.querySelectorAll('#rt-budel-choice button').forEach(x => x.classList.remove('selected'));
+  btnEl.classList.add('selected');
+  const istSonstiges = String(b.IstSonstigesTyp).toUpperCase() === 'JA';
+  document.getElementById('rt-budel-freitext-wrap').style.display = istSonstiges ? 'block' : 'none';
+}
+
+function addRetourePosition() {
+  const gid = document.getElementById('rt-pos-getraenk').value;
+  const g = GETRAENKE.find(x => x.ID === gid);
+  const menge = Number(document.getElementById('rt-pos-menge').value);
+  const einheit = document.getElementById('rt-pos-einheit').value;
+  if (!g || !menge || menge <= 0) { showToast('Bitte Getränk und Menge angeben.', true); return; }
+  RETOURE_POSITIONS.push({getraenkId: gid, name: g.Name, menge, einheit});
+  renderRetourePositions();
+}
+
+function renderRetourePositions() {
+  document.getElementById('rt-positions-list').innerHTML = RETOURE_POSITIONS.map((p, i) => `
+    <div class="pos-item">
+      <span>${p.menge} ${escapeHtml(p.einheit)} ${escapeHtml(p.name)}</span>
+      <button class="remove" onclick="removeRetourePosition(${i})">×</button>
+    </div>`).join('');
+}
+
+function removeRetourePosition(i) { RETOURE_POSITIONS.splice(i, 1); renderRetourePositions(); }
+
+async function submitRetoure(btn) {
+  const name = document.getElementById('rt-name').value.trim();
+  if (!name) return showToast('Bitte einen Namen eingeben.', true);
+  if (!RETOURE_SELECTED_BUDEL) return showToast('Bitte einen Budel auswählen.', true);
+  if (RETOURE_POSITIONS.length === 0) return showToast('Bitte mindestens ein Getränk hinzufügen.', true);
+  const istSonstiges = String(RETOURE_SELECTED_BUDEL.IstSonstigesTyp).toUpperCase() === 'JA';
+  const budelFreitext = istSonstiges ? document.getElementById('rt-budel-freitext').value.trim() : '';
+  if (istSonstiges && !budelFreitext) return showToast('Bitte den Bereich angeben.', true);
+
+  const payload = {
+    name, budelId: RETOURE_SELECTED_BUDEL.ID, budelFreitext,
+    positionen: RETOURE_POSITIONS.map(p => ({getraenkId: p.getraenkId, menge: p.menge, einheit: p.einheit}))
+  };
+  await runWithLoading(btn, '⏳ Wird gebucht...', async () => {
+    try {
+      const r = await apiCall('addRetoure', payload);
+      if (r.success) {
+        showToast('Rückgabe gebucht.');
+        document.getElementById('rt-name').value = '';
+        document.getElementById('rt-budel-freitext').value = '';
+        document.querySelectorAll('#rt-budel-choice button').forEach(x => x.classList.remove('selected'));
+        RETOURE_SELECTED_BUDEL = null;
+        RETOURE_POSITIONS = [];
+        renderRetourePositions();
+      } else {
+        showToast('Fehler: ' + r.error, true);
+      }
+    } catch (e) {
+      showToast('Keine Verbindung – bitte erneut versuchen.', true);
+    }
+  });
+}
+
+/* =========================================================
+   ADMIN: VERKÄUFE
+   ========================================================= */
 async function submitVerkaufszahl(btn) {
+  const budelId = document.getElementById('v-budel').value;
   const getraenkId = document.getElementById('v-getraenk').value;
   const tag = document.getElementById('v-tag').value.trim();
   const verkaufteMenge = Number(document.getElementById('v-menge').value);
   const einheit = document.getElementById('v-einheit').value;
   if (!tag || !verkaufteMenge) return showToast('Bitte Tag und Menge angeben.', true);
   await runWithLoading(btn, '⏳ Wird gespeichert...', async () => {
-    const r = await apiCall('addVerkaufszahl', withAdminPin({getraenkId, tag, verkaufteMenge, einheit}));
+    const r = await apiCall('addVerkaufszahl', withAdminPin({budelId, getraenkId, tag, verkaufteMenge, einheit}));
     if (r.success) showToast('Verkaufszahl gespeichert.'); else showToast('Fehler: ' + r.error, true);
   });
 }
 
 document.addEventListener('change', e => {
-  if (e.target.id === 'n-getraenk') updateUnitSelect('n-getraenk', 'n-einheit');
+  if (e.target.id === 'ns-n-getraenk') updateUnitSelect('ns-n-getraenk', 'ns-n-einheit');
+  if (e.target.id === 'rt-pos-getraenk') updateUnitSelect('rt-pos-getraenk', 'rt-pos-einheit');
   if (e.target.id === 'v-getraenk') updateUnitSelect('v-getraenk', 'v-einheit');
 });
 
@@ -896,12 +1029,30 @@ document.addEventListener('change', e => {
    ========================================================= */
 async function loadAuswertung(btn) {
   await runWithLoading(btn, '⏳ Wird geladen...', async () => {
-    const r = await apiCall('getAuswertung', withAdminPin({}));
-    if (!r.success) { showToast('Fehler: ' + r.error, true); return; }
-    LAST_AUSWERTUNG = r.data || [];
+    const [gRes, bRes] = await Promise.all([
+      apiCall('getAuswertung', withAdminPin({})),
+      apiCall('getAuswertungProBudel', withAdminPin({}))
+    ]);
+    if (!gRes.success) { showToast('Fehler: ' + gRes.error, true); return; }
+    LAST_AUSWERTUNG = gRes.data || [];
     document.querySelector('#auswertung-table tbody').innerHTML = LAST_AUSWERTUNG.map(a => `
-      <tr><td>${escapeHtml(a.name)}</td><td>${a.ausgegebenBasiseinheit}</td><td>${a.verkauftBasiseinheit}</td>
-      <td>${a.differenzBasiseinheit}</td><td>${a.differenzProzent}%</td></tr>`).join('');
+      <tr><td>${escapeHtml(a.getraenk)}</td><td>${a.ausgabe} ${escapeHtml(a.einheit)}</td><td>${a.rueckgabe}</td>
+      <td>${a.nettoErhalten}</td><td>${a.verkauf}</td><td>${a.differenz}</td><td>${a.differenzProzent}%</td></tr>`).join('');
+
+    const warnungen = [...new Set((gRes.warnungen || []).concat(bRes.warnungen || []))];
+    document.getElementById('auswertung-warnungen').innerHTML = warnungen.length
+      ? warnungen.map(w => `<div style="color:var(--warn);font-size:13px;margin-bottom:4px;">⚠️ ${escapeHtml(w)}</div>`).join('')
+      : '';
+
+    document.getElementById('auswertung-pro-budel').innerHTML = (bRes.proBudel || []).map(pb => `
+      <h3 style="color:var(--text-dim);margin:18px 0 8px 0;">${escapeHtml(pb.budelName)}</h3>
+      <div style="overflow-x:auto;">
+        <table><thead><tr><th>Getränk</th><th>Ausgabe</th><th>Rückgabe</th><th>Netto</th><th>Verkauf</th><th>Diff.</th><th>Diff. %</th></tr></thead>
+        <tbody>${pb.zeilen.map(z => `
+          <tr><td>${escapeHtml(z.getraenk)}</td><td>${z.ausgabe} ${escapeHtml(z.einheit)}</td><td>${z.rueckgabe}</td>
+          <td>${z.nettoErhalten}</td><td>${z.verkauf}</td><td>${z.differenz}</td><td>${z.differenzProzent}%</td></tr>`).join('')}
+        </tbody></table>
+      </div>`).join('');
   });
 }
 
@@ -928,8 +1079,8 @@ function exportBestandCsv() {
   downloadCsv('bestand.csv', rows);
 }
 function exportAuswertungCsv() {
-  const rows = [['Getränk','Ausgegeben','Verkauft','Differenz','Differenz %']]
-    .concat(LAST_AUSWERTUNG.map(a => [a.name,a.ausgegebenBasiseinheit,a.verkauftBasiseinheit,a.differenzBasiseinheit,a.differenzProzent]));
+  const rows = [['Getränk','Ausgabe','Rückgabe','Netto erhalten','Verkauf','Differenz','Differenz %']]
+    .concat(LAST_AUSWERTUNG.map(a => [a.getraenk,a.ausgabe,a.rueckgabe,a.nettoErhalten,a.verkauf,a.differenz,a.differenzProzent]));
   downloadCsv('auswertung.csv', rows);
 }
 
