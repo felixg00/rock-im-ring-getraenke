@@ -159,7 +159,7 @@
     <datalist id="name-vorschlaege"></datalist>
 
     <label>Für welchen Budel?</label>
-    <div id="budel-choice" class="grid-choice"></div>
+    <select id="budel-select"></select>
     <div id="budel-freitext-wrap" style="display:none;">
       <label>Welcher Bereich?</label>
       <input type="text" id="budel-freitext" placeholder="z. B. Backstage, VIP, Crew">
@@ -184,28 +184,14 @@
     </button>
   </div>
 
-  <!-- NACHSCHUB (Nachlieferung + Rückgabe – für Mitarbeiter und Admin) -->
-  <div id="screen-nachschub" class="screen">
-    <h2 style="margin:16px 0;">Nachschub</h2>
-
+  <!-- RÜCKGABE (für Mitarbeiter und Admin) -->
+  <div id="screen-rueckgabe" class="screen">
+    <h2 style="margin:16px 0;">Rückgabe</h2>
     <div class="card">
-      <h3>Nachlieferung eintragen</h3>
-      <label>Getränk</label><select id="ns-n-getraenk"></select>
-      <div class="grid-2">
-        <div><label>Menge</label><input type="number" id="ns-n-menge" value="1"></div>
-        <div><label>Einheit</label><select id="ns-n-einheit"></select></div>
-      </div>
-      <label>Eingetragen von</label><input type="text" id="ns-n-von">
-      <div style="height:10px"></div>
-      <button class="btn primary" style="width:100%" onclick="submitNachlieferungShared(this)">Nachlieferung buchen</button>
-    </div>
-
-    <div class="card">
-      <h3>Rückgabe erfassen</h3>
       <label>Wer bringt zurück?</label>
       <input type="text" id="rt-name" placeholder="Name eingeben">
       <label>Von welchem Budel?</label>
-      <div id="rt-budel-choice" class="grid-choice"></div>
+      <select id="rt-budel-select"></select>
       <div id="rt-budel-freitext-wrap" style="display:none;">
         <label>Welcher Bereich?</label>
         <input type="text" id="rt-budel-freitext" placeholder="z. B. Backstage, VIP, Crew">
@@ -222,6 +208,23 @@
       <div style="height:10px"></div>
       <button class="btn primary" style="width:100%" onclick="submitRetoure(this)">Rückgabe bestätigen</button>
       <p style="color:var(--text-dim);font-size:12px;margin-top:8px;">Hinweis: Anders als bei der Ausgabe gibt es hier noch keine Offline-Warteschlange – dafür wird kurz Internet benötigt.</p>
+    </div>
+  </div>
+
+  <!-- NACHSCHUB (Nachlieferung – nur Admin) -->
+  <div id="screen-nachschub" class="screen">
+    <h2 style="margin:16px 0;">Nachschub</h2>
+
+    <div class="card">
+      <h3>Nachlieferung eintragen</h3>
+      <label>Getränk</label><select id="ns-n-getraenk"></select>
+      <div class="grid-2">
+        <div><label>Menge</label><input type="number" id="ns-n-menge" value="1"></div>
+        <div><label>Einheit</label><select id="ns-n-einheit"></select></div>
+      </div>
+      <label>Eingetragen von</label><input type="text" id="ns-n-von">
+      <div style="height:10px"></div>
+      <button class="btn primary" style="width:100%" onclick="submitNachlieferungShared(this)">Nachlieferung buchen</button>
     </div>
   </div>
 
@@ -373,14 +376,25 @@
           <button class="btn" onclick="exportBestandCsv()">Bestand</button>
           <button class="btn" onclick="exportAuswertungCsv()">Auswertung</button>
         </div>
-        <p style="color:var(--text-dim);font-size:13px;margin-top:12px;">Lädt jeweils die zuletzt geladenen Daten der entsprechenden Ansicht als CSV-Datei herunter.</p>
+        <p style="color:var(--text-dim);font-size:13px;margin-top:12px;">Lädt jeweils die zuletzt geladenen Daten der entsprechenden Ansicht als CSV-Datei herunter. Am besten VOR einem Reset exportieren.</p>
+      </div>
+
+      <div class="card" style="border:1px solid var(--danger);">
+        <h3 style="color:var(--danger);">Neues Festival-Jahr starten</h3>
+        <p style="color:var(--text-dim);font-size:13px;">
+          Löscht unwiderruflich alle Ausgaben, Rückgaben, Nachlieferungen, Korrekturen, Verkaufszahlen und den Bestand (auf 0).
+          Getränke, Budel, Verkaufsgetränke/Rezepturen und die PINs bleiben erhalten.
+          Vorher unbedingt exportieren, falls die Daten noch gebraucht werden!
+        </p>
+        <button class="btn danger" style="width:100%" onclick="resetFestivalUI(this)">Alle Einträge löschen &amp; neu beginnen</button>
       </div>
     </div>
   </div>
 
   <div class="navbar">
     <button data-screen="ausgabe" onclick="showScreen('ausgabe')" class="active">Ausgabe</button>
-    <button data-screen="nachschub" onclick="showScreen('nachschub')">Nachschub</button>
+    <button data-screen="rueckgabe" onclick="showScreen('rueckgabe')">Rückgabe</button>
+    <button data-screen="nachschub" id="nav-nachschub" onclick="showScreen('nachschub')" style="display:none;">Nachschub</button>
     <button data-screen="bestand" id="nav-bestand" onclick="showScreen('bestand')" style="display:none;">Bestand</button>
     <button data-screen="historie" onclick="showScreen('historie')">Historie</button>
     <button data-screen="admin" id="nav-admin" onclick="showScreen('admin')" style="display:none;">Admin</button>
@@ -491,6 +505,7 @@ function enterApp() {
   if (ROLE === 'admin') {
     document.getElementById('nav-admin').style.display = 'block';
     document.getElementById('nav-bestand').style.display = 'block';
+    document.getElementById('nav-nachschub').style.display = 'block';
   }
   loadStammdaten();
   showScreen('ausgabe');
@@ -509,6 +524,7 @@ function doLogout() {
   document.getElementById('pin-input').value = '';
   document.getElementById('nav-admin').style.display = 'none';
   document.getElementById('nav-bestand').style.display = 'none';
+  document.getElementById('nav-nachschub').style.display = 'none';
   document.getElementById('app').style.display = 'none';
   document.getElementById('screen-login').style.display = 'flex';
 }
@@ -578,20 +594,15 @@ function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;'
    AUSGABE-BILDSCHIRM
    ========================================================= */
 function renderBudelChoice() {
-  const wrap = document.getElementById('budel-choice');
-  wrap.innerHTML = '';
-  BUDEL.forEach(b => {
-    const btn = document.createElement('button');
-    btn.textContent = b.Name;
-    btn.onclick = () => selectBudel(b);
-    wrap.appendChild(btn);
-  });
+  renderSelect('budel-select', BUDEL, b => b.ID, b => b.Name);
+  const sel = document.getElementById('budel-select');
+  sel.onchange = () => selectBudel(BUDEL.find(b => b.ID === sel.value));
+  if (BUDEL.length > 0) selectBudel(BUDEL[0]);
 }
 
 function selectBudel(b) {
   SELECTED_BUDEL = b;
-  document.querySelectorAll('#budel-choice button').forEach(x => x.classList.remove('selected'));
-  event.target.classList.add('selected');
+  if (!b) return;
   const istSonstiges = String(b.IstSonstigesTyp).toUpperCase() === 'JA';
   document.getElementById('budel-freitext-wrap').style.display = istSonstiges ? 'block' : 'none';
 }
@@ -679,8 +690,6 @@ function onAusgabeErfolg(name, summary, offline) {
   if (!namen.includes(name)) { namen.unshift(name); localStorage.setItem('rir_namen', JSON.stringify(namen.slice(0, 30))); }
   document.getElementById('ausgabe-name').value = '';
   document.getElementById('budel-freitext').value = '';
-  document.querySelectorAll('#budel-choice button').forEach(x => x.classList.remove('selected'));
-  SELECTED_BUDEL = null;
   POSITIONS = [];
   renderPositions();
   showConfirm(
@@ -978,20 +987,15 @@ async function submitNachlieferungShared(btn) {
    NACHSCHUB: RÜCKGABE (für alle Rollen)
    ========================================================= */
 function renderRetoureBudelChoice() {
-  const wrap = document.getElementById('rt-budel-choice');
-  wrap.innerHTML = '';
-  BUDEL.forEach(b => {
-    const btn = document.createElement('button');
-    btn.textContent = b.Name;
-    btn.onclick = () => selectRetoureBudel(b, btn);
-    wrap.appendChild(btn);
-  });
+  renderSelect('rt-budel-select', BUDEL, b => b.ID, b => b.Name);
+  const sel = document.getElementById('rt-budel-select');
+  sel.onchange = () => selectRetoureBudel(BUDEL.find(b => b.ID === sel.value));
+  if (BUDEL.length > 0) selectRetoureBudel(BUDEL[0]);
 }
 
-function selectRetoureBudel(b, btnEl) {
+function selectRetoureBudel(b) {
   RETOURE_SELECTED_BUDEL = b;
-  document.querySelectorAll('#rt-budel-choice button').forEach(x => x.classList.remove('selected'));
-  btnEl.classList.add('selected');
+  if (!b) return;
   const istSonstiges = String(b.IstSonstigesTyp).toUpperCase() === 'JA';
   document.getElementById('rt-budel-freitext-wrap').style.display = istSonstiges ? 'block' : 'none';
 }
@@ -1036,8 +1040,6 @@ async function submitRetoure(btn) {
         showToast('Rückgabe gebucht.');
         document.getElementById('rt-name').value = '';
         document.getElementById('rt-budel-freitext').value = '';
-        document.querySelectorAll('#rt-budel-choice button').forEach(x => x.classList.remove('selected'));
-        RETOURE_SELECTED_BUDEL = null;
         RETOURE_POSITIONS = [];
         renderRetourePositions();
       } else {
@@ -1204,6 +1206,30 @@ function exportAuswertungCsv() {
   const rows = [['Getränk','Ausgabe','Rückgabe','Netto erhalten','Verkauf','Differenz','Differenz %']]
     .concat(LAST_AUSWERTUNG.map(a => [a.getraenk,a.ausgabe,a.rueckgabe,a.nettoErhalten,a.verkauf,a.differenz,a.differenzProzent]));
   downloadCsv('auswertung.csv', rows);
+}
+
+/* =========================================================
+   ADMIN: NEUES FESTIVAL-JAHR (ALLE BEWEGUNGSDATEN LÖSCHEN)
+   ========================================================= */
+async function resetFestivalUI(btn) {
+  const ok1 = confirm(
+    '⚠️ Das löscht UNWIDERRUFLICH alle Ausgaben, Rückgaben, Nachlieferungen, Korrekturen, ' +
+    'Verkaufszahlen und setzt den Bestand auf 0.\n\nGetränke, Budel, Verkaufsgetränke und PINs bleiben erhalten.\n\n' +
+    'Hast du die aktuellen Daten vorher exportiert (Historie/Bestand/Auswertung)?'
+  );
+  if (!ok1) return;
+  const eingabe = prompt('Um fortzufahren, tippe genau: LOESCHEN');
+  if (eingabe !== 'LOESCHEN') { if (eingabe !== null) showToast('Abgebrochen – Bestätigungstext stimmte nicht überein.', true); return; }
+
+  await runWithLoading(btn, '⏳ Wird zurückgesetzt...', async () => {
+    const r = await apiCall('resetFestival', withAdminPin({bestaetigung: 'LOESCHEN'}));
+    if (r.success) {
+      showToast('Zurückgesetzt – bereit für ein neues Festival-Jahr.');
+      loadStammdaten();
+    } else {
+      showToast('Fehler: ' + r.error, true);
+    }
+  });
 }
 
 /* =========================================================
