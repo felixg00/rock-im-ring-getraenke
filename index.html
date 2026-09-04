@@ -262,6 +262,7 @@
     <div class="admin-subnav">
       <button data-pane="admin-getraenke" onclick="showAdminPane('admin-getraenke')" class="active">Getränke</button>
       <button data-pane="admin-budel" onclick="showAdminPane('admin-budel')">Budel</button>
+      <button data-pane="admin-verkaufsgetraenke" onclick="showAdminPane('admin-verkaufsgetraenke')">Verkaufsgetränke</button>
       <button data-pane="admin-verkauf" onclick="showAdminPane('admin-verkauf')">Verkäufe</button>
       <button data-pane="admin-auswertung" onclick="showAdminPane('admin-auswertung')">Auswertung</button>
       <button data-pane="admin-export" onclick="showAdminPane('admin-export')">Export</button>
@@ -287,6 +288,9 @@
           <div><label>Niedrig ab (Basiseinheit)</label><input type="number" id="g-niedrig" value="0"></div>
         </div>
         <label>Anfangsbestand (nur beim Anlegen, in Basiseinheit)</label><input type="number" id="g-anfang" value="0">
+        <label style="display:flex;align-items:center;gap:8px;margin-top:14px;">
+          <input type="checkbox" id="g-aktiv" style="width:auto;" checked> Aktiv (in der Ausgabe auswählbar)
+        </label>
         <div style="height:10px"></div>
         <div class="btn-row">
           <button class="btn primary" onclick="saveGetraenk(this)">Speichern</button>
@@ -309,16 +313,38 @@
       <div id="budel-admin-list"></div>
     </div>
 
+    <div id="admin-verkaufsgetraenke" class="admin-pane">
+      <div class="card">
+        <h3>Verkaufsgetränk anlegen / bearbeiten</h3>
+        <input type="hidden" id="vg-id">
+        <label>Name</label><input type="text" id="vg-name" placeholder="z. B. Jacky Cola">
+        <label style="display:flex;align-items:center;gap:8px;margin-top:14px;">
+          <input type="checkbox" id="vg-aktiv" style="width:auto;" checked> Aktiv
+        </label>
+
+        <h3 style="margin-top:18px;">Zutaten (Lagergetränk + Liter pro Verkauf)</h3>
+        <label>Lagergetränk</label><select id="vg-zutat-getraenk"></select>
+        <label>Liter pro Verkauf</label><input type="number" step="0.01" id="vg-zutat-liter" placeholder="z. B. 0,04">
+        <div style="height:10px"></div>
+        <button class="btn" style="width:100%" onclick="addVgZutat()">+ Zutat hinzufügen</button>
+        <div id="vg-zutaten-list" style="margin-top:10px;"></div>
+
+        <div style="height:10px"></div>
+        <div class="btn-row">
+          <button class="btn primary" onclick="saveVerkaufsgetraenk(this)">Speichern</button>
+          <button class="btn" onclick="resetVerkaufsgetraenkForm()">Neues Verkaufsgetränk</button>
+        </div>
+      </div>
+      <div id="verkaufsgetraenke-admin-list"></div>
+    </div>
+
     <div id="admin-verkauf" class="admin-pane">
       <div class="card">
         <h3>Verkaufszahl eintragen</h3>
         <label>Budel</label><select id="v-budel"></select>
-        <label>Getränk</label><select id="v-getraenk"></select>
+        <label>Verkaufsgetränk</label><select id="v-verkaufsgetraenk"></select>
         <label>Tag</label><input type="text" id="v-tag" placeholder="z. B. Freitag">
-        <div class="grid-2">
-          <div><label>Verkaufte Menge</label><input type="number" id="v-menge"></div>
-          <div><label>Einheit</label><select id="v-einheit"></select></div>
-        </div>
+        <label>Verkaufte Menge (Anzahl)</label><input type="number" id="v-menge">
         <div style="height:10px"></div>
         <button class="btn primary" style="width:100%" onclick="submitVerkaufszahl(this)">Speichern</button>
       </div>
@@ -390,6 +416,8 @@ let RETOURE_SELECTED_BUDEL = null;
 let LAST_HISTORIE = [];
 let LAST_BESTAND = [];
 let LAST_AUSWERTUNG = [];
+let VERKAUFSGETRAENKE = [];
+let VG_ZUTATEN = [];
 
 /* =========================================================
    API-ZUGRIFF
@@ -529,9 +557,13 @@ async function loadStammdaten() {
     if (ROLE === 'admin') {
       renderAdminGetraenkeList();
       renderAdminBudelList();
-      renderSelect('v-getraenk', GETRAENKE, g => g.ID, g => g.Name);
-      updateUnitSelect('v-getraenk', 'v-einheit');
       renderSelect('v-budel', BUDEL, b => b.ID, b => b.Name);
+      renderSelect('vg-zutat-getraenk', GETRAENKE, g => g.ID, g => g.Name);
+
+      const vgRes = await apiCall('getVerkaufsgetraenke', {includeInactive: true});
+      VERKAUFSGETRAENKE = vgRes.data || [];
+      renderAdminVerkaufsgetraenkeList();
+      renderSelect('v-verkaufsgetraenk', VERKAUFSGETRAENKE.filter(v => String(v.Aktiv).toUpperCase() === 'JA'), v => v.ID, v => v.Name);
     }
     const namen = JSON.parse(localStorage.getItem('rir_namen') || '[]');
     document.getElementById('name-vorschlaege').innerHTML = namen.map(n => `<option value="${escapeHtml(n)}">`).join('');
@@ -834,16 +866,28 @@ function renderAdminGetraenkeList() {
     const gebinde = g.GebindeName ? `${escapeHtml(g.GebindeName)} = ${g.FlaschenProGebinde} × ${escapeHtml(g.Basiseinheit)}` : '—';
     const verkauf = g.VerkaufseinheitName ? `${escapeHtml(g.VerkaufseinheitName)} (${g.VolumenProVerkaufseinheitL} L)` : '—';
     const basisvol = g.VolumenProFlascheL ? ` · ${escapeHtml(g.Basiseinheit)} = ${g.VolumenProFlascheL} L` : '';
-    return `<div class="card" style="cursor:pointer;" onclick='editGetraenk(${JSON.stringify(g).replace(/'/g, "&#39;")})'>
-      <div style="display:flex;justify-content:space-between;">
-        <strong>${escapeHtml(g.Name)}</strong>
-        <span style="color:var(--text-dim);font-size:12px;">${String(g.Aktiv).toUpperCase()==='JA' ? 'aktiv' : 'inaktiv'}</span>
+    return `<div class="card">
+      <div style="cursor:pointer;" onclick='editGetraenk(${JSON.stringify(g).replace(/'/g, "&#39;")})'>
+        <div style="display:flex;justify-content:space-between;">
+          <strong>${escapeHtml(g.Name)}</strong>
+          <span style="color:var(--text-dim);font-size:12px;">${String(g.Aktiv).toUpperCase()==='JA' ? 'aktiv' : 'inaktiv'}</span>
+        </div>
+        <div class="sub" style="color:var(--text-dim);font-size:13px;margin-top:4px;">
+          Basiseinheit: ${escapeHtml(g.Basiseinheit)}${basisvol} · Gebinde: ${gebinde} · Verkaufseinheit: ${verkauf}
+        </div>
       </div>
-      <div class="sub" style="color:var(--text-dim);font-size:13px;margin-top:4px;">
-        Basiseinheit: ${escapeHtml(g.Basiseinheit)}${basisvol} · Gebinde: ${gebinde} · Verkaufseinheit: ${verkauf}
-      </div>
+      <button class="btn danger" style="padding:6px 10px;font-size:12px;margin-top:8px;" onclick='event.stopPropagation();deleteGetraenkUI(this,"${g.ID}","${escapeHtml(g.Name).replace(/"/g,"&quot;")}")'>Löschen</button>
     </div>`;
   }).join('');
+}
+
+async function deleteGetraenkUI(btn, getraenkId, name) {
+  if (!confirm('"' + name + '" wirklich löschen? Das geht nur, wenn es noch nirgendwo verwendet wurde. Falls unsicher: lieber deaktivieren (Bearbeiten-Formular).')) return;
+  await runWithLoading(btn, '⏳...', async () => {
+    const r = await apiCall('deleteGetraenk', withAdminPin({getraenkId}));
+    if (r.success) { showToast('Gelöscht.'); loadStammdaten(); }
+    else showToast(r.error, true);
+  });
 }
 
 function editGetraenk(g) {
@@ -858,6 +902,7 @@ function editGetraenk(g) {
   document.getElementById('g-kritisch').value = g.KritischSchwelle || 0;
   document.getElementById('g-niedrig').value = g.NiedrigSchwelle || 0;
   document.getElementById('g-anfang').value = 0;
+  document.getElementById('g-aktiv').checked = String(g.Aktiv).toUpperCase() === 'JA';
   showAdminPane('admin-getraenke');
 }
 
@@ -866,6 +911,7 @@ function resetGetraenkForm() {
   document.getElementById('g-kritisch').value = 0;
   document.getElementById('g-niedrig').value = 0;
   document.getElementById('g-anfang').value = 0;
+  document.getElementById('g-aktiv').checked = true;
 }
 
 async function saveGetraenk(btn) {
@@ -879,7 +925,8 @@ async function saveGetraenk(btn) {
     volumenProVerkaufseinheitL: document.getElementById('g-verkaufvol').value,
     volumenProFlascheL: document.getElementById('g-basisvol').value,
     kritischSchwelle: document.getElementById('g-kritisch').value,
-    niedrigSchwelle: document.getElementById('g-niedrig').value
+    niedrigSchwelle: document.getElementById('g-niedrig').value,
+    aktiv: document.getElementById('g-aktiv').checked ? 'JA' : 'NEIN'
   };
   if (!data.name || !data.basiseinheit) return showToast('Name und Basiseinheit sind Pflichtfelder.', true);
   await runWithLoading(btn, '⏳ Wird gespeichert...', async () => {
@@ -1003,25 +1050,95 @@ async function submitRetoure(btn) {
 }
 
 /* =========================================================
-   ADMIN: VERKÄUFE
+   ADMIN: VERKÄUFE (jetzt über Verkaufsgetränke)
    ========================================================= */
 async function submitVerkaufszahl(btn) {
   const budelId = document.getElementById('v-budel').value;
-  const getraenkId = document.getElementById('v-getraenk').value;
+  const verkaufsgetraenkId = document.getElementById('v-verkaufsgetraenk').value;
   const tag = document.getElementById('v-tag').value.trim();
   const verkaufteMenge = Number(document.getElementById('v-menge').value);
-  const einheit = document.getElementById('v-einheit').value;
   if (!tag || !verkaufteMenge) return showToast('Bitte Tag und Menge angeben.', true);
+  if (!verkaufsgetraenkId) return showToast('Bitte ein Verkaufsgetränk auswählen (siehe Tab "Verkaufsgetränke").', true);
   await runWithLoading(btn, '⏳ Wird gespeichert...', async () => {
-    const r = await apiCall('addVerkaufszahl', withAdminPin({budelId, getraenkId, tag, verkaufteMenge, einheit}));
+    const r = await apiCall('addVerkaufszahl', withAdminPin({budelId, verkaufsgetraenkId, tag, verkaufteMenge}));
     if (r.success) showToast('Verkaufszahl gespeichert.'); else showToast('Fehler: ' + r.error, true);
+  });
+}
+
+/* =========================================================
+   ADMIN: VERKAUFSGETRÄNKE (REZEPTUREN)
+   ========================================================= */
+function renderAdminVerkaufsgetraenkeList() {
+  const wrap = document.getElementById('verkaufsgetraenke-admin-list');
+  wrap.innerHTML = VERKAUFSGETRAENKE.map(v => {
+    const zutText = (v.zutaten || []).map(z => `${z.literProVerkauf} L ${escapeHtml(z.getraenk)}`).join(', ') || '—';
+    return `<div class="card" style="cursor:pointer;" onclick='editVerkaufsgetraenk(${JSON.stringify(v).replace(/'/g, "&#39;")})'>
+      <div style="display:flex;justify-content:space-between;">
+        <strong>${escapeHtml(v.Name)}</strong>
+        <span style="color:var(--text-dim);font-size:12px;">${String(v.Aktiv).toUpperCase()==='JA' ? 'aktiv' : 'inaktiv'}</span>
+      </div>
+      <div class="sub" style="color:var(--text-dim);font-size:13px;margin-top:4px;">${zutText}</div>
+    </div>`;
+  }).join('');
+}
+
+function editVerkaufsgetraenk(v) {
+  document.getElementById('vg-id').value = v.ID;
+  document.getElementById('vg-name').value = v.Name;
+  document.getElementById('vg-aktiv').checked = String(v.Aktiv).toUpperCase() === 'JA';
+  VG_ZUTATEN = (v.zutaten || []).map(z => ({getraenkId: z.getraenkId, name: z.getraenk, literProVerkauf: z.literProVerkauf}));
+  renderVgZutaten();
+  showAdminPane('admin-verkaufsgetraenke');
+}
+
+function resetVerkaufsgetraenkForm() {
+  document.getElementById('vg-id').value = '';
+  document.getElementById('vg-name').value = '';
+  document.getElementById('vg-aktiv').checked = true;
+  VG_ZUTATEN = [];
+  renderVgZutaten();
+}
+
+function addVgZutat() {
+  const gid = document.getElementById('vg-zutat-getraenk').value;
+  const g = GETRAENKE.find(x => x.ID === gid);
+  const liter = Number(document.getElementById('vg-zutat-liter').value);
+  if (!g || !liter || liter <= 0) return showToast('Bitte Lagergetränk und Literangabe angeben.', true);
+  if (!g.VolumenProFlascheL) return showToast('"' + g.Name + '" hat kein Volumen pro Basiseinheit hinterlegt – bitte zuerst bei diesem Getränk ergänzen.', true);
+  VG_ZUTATEN.push({getraenkId: gid, name: g.Name, literProVerkauf: liter});
+  renderVgZutaten();
+  document.getElementById('vg-zutat-liter').value = '';
+}
+
+function renderVgZutaten() {
+  document.getElementById('vg-zutaten-list').innerHTML = VG_ZUTATEN.map((z, i) => `
+    <div class="pos-item">
+      <span>${z.literProVerkauf} L ${escapeHtml(z.name)}</span>
+      <button class="remove" onclick="removeVgZutat(${i})">×</button>
+    </div>`).join('');
+}
+
+function removeVgZutat(i) { VG_ZUTATEN.splice(i, 1); renderVgZutaten(); }
+
+async function saveVerkaufsgetraenk(btn) {
+  const id = document.getElementById('vg-id').value;
+  const name = document.getElementById('vg-name').value.trim();
+  const aktiv = document.getElementById('vg-aktiv').checked;
+  if (!name) return showToast('Bitte einen Namen angeben.', true);
+  if (VG_ZUTATEN.length === 0) return showToast('Bitte mindestens eine Zutat hinzufügen.', true);
+  const zutaten = VG_ZUTATEN.map(z => ({getraenkId: z.getraenkId, literProVerkauf: z.literProVerkauf}));
+  await runWithLoading(btn, '⏳ Wird gespeichert...', async () => {
+    let r;
+    if (id) r = await apiCall('updateVerkaufsgetraenk', withAdminPin({verkaufsgetraenkId: id, name, aktiv, zutaten}));
+    else r = await apiCall('addVerkaufsgetraenk', withAdminPin({name, zutaten}));
+    if (r.success) { showToast('Gespeichert.'); resetVerkaufsgetraenkForm(); loadStammdaten(); }
+    else showToast('Fehler: ' + r.error, true);
   });
 }
 
 document.addEventListener('change', e => {
   if (e.target.id === 'ns-n-getraenk') updateUnitSelect('ns-n-getraenk', 'ns-n-einheit');
   if (e.target.id === 'rt-pos-getraenk') updateUnitSelect('rt-pos-getraenk', 'rt-pos-einheit');
-  if (e.target.id === 'v-getraenk') updateUnitSelect('v-getraenk', 'v-einheit');
 });
 
 /* =========================================================
@@ -1051,8 +1168,13 @@ async function loadAuswertung(btn) {
         <tbody>${pb.zeilen.map(z => `
           <tr><td>${escapeHtml(z.getraenk)}</td><td>${z.ausgabe} ${escapeHtml(z.einheit)}</td><td>${z.rueckgabe}</td>
           <td>${z.nettoErhalten}</td><td>${z.verkauf}</td><td>${z.differenz}</td><td>${z.differenzProzent}%</td></tr>`).join('')}
+          <tr style="font-weight:700;border-top:2px solid var(--border);">
+            <td>Summe${pb.gesamt.einheitenGemischt ? ' *' : ''}</td><td>${pb.gesamt.ausgabe}</td><td>${pb.gesamt.rueckgabe}</td>
+            <td>${pb.gesamt.nettoErhalten}</td><td>${pb.gesamt.verkauf}</td><td>${pb.gesamt.differenz}</td><td>${pb.gesamt.differenzProzent}%</td>
+          </tr>
         </tbody></table>
-      </div>`).join('');
+      </div>
+      ${pb.gesamt.einheitenGemischt ? '<p style="color:var(--text-dim);font-size:12px;margin-top:-6px;">* Getränke mit unterschiedlichen Basiseinheiten – die Summe ist eine grobe Gesamtzahl, keine einheitliche Menge.</p>' : ''}`).join('');
   });
 }
 
