@@ -16,6 +16,7 @@
     --text:#241F1A;
     --text-dim:#7C7266;
     --accent:#E8791C;
+    --accent-2:#F5A94A;
     --accent-ink:#FFFFFF;
     --danger:#C6392E;
     --warn:#B8791A;
@@ -32,6 +33,7 @@
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
     -webkit-tap-highlight-color:transparent;
     overscroll-behavior:none;
+    -webkit-font-smoothing:antialiased;
   }
   h1,h2,h3{
     font-family:"Arial Black","Helvetica Neue",Arial,sans-serif;
@@ -40,93 +42,129 @@
     font-weight:900;
   }
   .app{max-width:640px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;}
-  .topbar{padding:14px 20px 6px 20px;display:flex;justify-content:space-between;align-items:center;}
-  .topbar-logo{height:38px;display:block;}
-  .logout-btn{background:none;border:none;color:var(--text-dim);font-size:13px;font-weight:700;
-    text-decoration:underline;cursor:pointer;padding:6px;}
-  .screen{flex:1;padding:0 16px 96px 16px;display:none;}
-  .screen.active{display:block;}
+  .topbar{padding:14px 20px;display:flex;justify-content:space-between;align-items:center;
+    background:var(--panel);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:30;}
+  .topbar-logo{height:36px;display:block;}
+  .logout-btn{background:var(--field);border:1px solid var(--border);color:var(--text-dim);font-size:12px;font-weight:700;
+    border-radius:20px;cursor:pointer;padding:8px 14px;transition:transform .12s ease, background .15s ease;}
+  .logout-btn:active{transform:scale(0.94);background:var(--border);}
+
+  @keyframes screenIn{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+  .screen{flex:1;padding:18px 16px 100px 16px;display:none;}
+  .screen.active{display:block; animation:screenIn .28s ease;}
+  .screen h2{font-size:22px;}
 
   .hero-btn{
-    display:block;width:100%;border:none;background:var(--accent);color:var(--accent-ink);
-    border-radius:var(--radius-lg);padding:28px 20px;font-size:26px;font-family:"Arial Black","Helvetica Neue",Arial,sans-serif;
+    display:block;width:100%;border:none;color:var(--accent-ink);
+    background:linear-gradient(135deg,var(--accent-2),var(--accent) 65%);
+    border-radius:var(--radius-lg);padding:26px 22px;font-size:25px;font-family:"Arial Black","Helvetica Neue",Arial,sans-serif;
     font-weight:900;text-align:left;cursor:pointer;margin-bottom:14px;
+    box-shadow:0 10px 24px rgba(232,121,28,0.35);
+    transition:transform .12s ease, box-shadow .12s ease;
   }
-  .hero-btn small{display:block;font-size:14px;font-weight:600;opacity:0.75;margin-top:4px;}
+  .hero-btn:active{transform:scale(0.98);box-shadow:0 5px 14px rgba(232,121,28,0.3);}
+  .hero-btn small{display:block;font-size:14px;font-weight:600;opacity:0.85;margin-top:4px;}
+  .hero-btn:disabled{opacity:0.75;box-shadow:none;}
 
-  .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin-bottom:12px;
-    box-shadow:0 2px 8px rgba(60,45,20,0.05);}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-bottom:12px;
+    box-shadow:0 2px 10px rgba(60,45,20,0.06); transition:transform .12s ease, box-shadow .12s ease;}
   .card h3{font-size:15px;color:var(--text-dim);text-transform:none;}
+  .card[onclick]:active, .card > div[onclick]:active{transform:scale(0.99);}
 
-  label{display:block;font-size:13px;color:var(--text-dim);margin:14px 0 6px 0;}
+  label{display:block;font-size:13px;color:var(--text-dim);margin:14px 0 6px 0;font-weight:600;}
   input[type=text],input[type=number],input[type=date],select,textarea{
-    width:100%;background:var(--field);border:1px solid var(--border);color:var(--text);
-    border-radius:var(--radius-sm);padding:14px;font-size:17px;font-family:inherit;
+    width:100%;background:var(--field);border:1.5px solid var(--border);color:var(--text);
+    border-radius:var(--radius-sm);padding:13px 14px;font-size:16.5px;font-family:inherit;
+    transition:border-color .15s ease, box-shadow .15s ease;
   }
-  input:focus,select:focus,button:focus{outline:2px solid var(--accent);outline-offset:2px;}
+  input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(232,121,28,0.15);outline:none;}
+  button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
 
   .btn{
-    background:var(--field);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-sm);
-    padding:14px 16px;font-size:16px;font-weight:700;cursor:pointer;
+    background:var(--field);color:var(--text);border:1.5px solid var(--border);border-radius:var(--radius-sm);
+    padding:14px 16px;font-size:15.5px;font-weight:700;cursor:pointer;
+    transition:transform .12s ease, background .15s ease, box-shadow .12s ease;
   }
-  .btn.primary{background:var(--accent);color:var(--accent-ink);border:none;}
+  .btn:active{transform:scale(0.96);}
+  .btn.primary{background:var(--accent);color:var(--accent-ink);border:none;box-shadow:0 4px 12px rgba(232,121,28,0.28);}
+  .btn.primary:active{box-shadow:0 2px 6px rgba(232,121,28,0.25);}
   .btn.danger{background:var(--danger);color:#fff;border:none;}
+  .btn:disabled{opacity:0.7;transform:none;}
   .btn-row{display:flex;gap:10px;flex-wrap:wrap;}
   .btn-row .btn{flex:1;min-width:120px;}
 
   .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-  .grid-choice button{width:100%;padding:16px;margin-bottom:8px;border-radius:var(--radius-sm);
-    border:1px solid var(--border);background:var(--field);color:var(--text);font-size:16px;font-weight:700;cursor:pointer;text-align:left;}
-  .grid-choice button.selected{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);}
 
   .pos-item{display:flex;justify-content:space-between;align-items:center;background:var(--field);
-    border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:8px;}
-  .pos-item .remove{color:var(--danger);background:none;border:none;font-size:20px;cursor:pointer;}
+    border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:8px;border:1px solid var(--border);}
+  .pos-item .remove{color:var(--danger);background:none;border:none;font-size:20px;cursor:pointer;line-height:1;
+    width:28px;height:28px;border-radius:50%;transition:background .15s ease;}
+  .pos-item .remove:active{background:rgba(198,57,46,0.15);}
 
   .stock-card{display:flex;justify-content:space-between;align-items:center;border-left:6px solid var(--good);
     background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:10px;
-    box-shadow:0 2px 8px rgba(60,45,20,0.05);}
+    box-shadow:0 2px 8px rgba(60,45,20,0.05); transition:transform .12s ease;}
   .stock-card.warn{border-left-color:var(--warn);}
   .stock-card.danger{border-left-color:var(--danger);}
   .stock-card .amt{font-size:22px;font-weight:900;font-family:"Arial Black","Helvetica Neue",Arial,sans-serif;}
   .stock-card .sub{font-size:13px;color:var(--text-dim);}
 
-  table{width:100%;border-collapse:collapse;font-size:14px;}
-  th,td{text-align:left;padding:10px 6px;border-bottom:1px solid var(--border);}
-  th{color:var(--text-dim);font-weight:600;}
+  .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;
+    background:var(--field);color:var(--text-dim);}
+  .badge.on{background:rgba(63,122,69,0.15);color:var(--good);}
+  .badge.off{background:rgba(124,114,102,0.15);color:var(--text-dim);}
+
+  table{width:100%;border-collapse:separate;border-spacing:0;font-size:14px;}
+  th,td{text-align:left;padding:11px 8px;border-bottom:1px solid var(--border);}
+  th{color:var(--text-dim);font-weight:700;font-size:12.5px;text-transform:uppercase;letter-spacing:0.02em;
+    background:var(--field);position:sticky;top:0;}
+  thead tr th:first-child{border-top-left-radius:var(--radius-sm);}
+  thead tr th:last-child{border-top-right-radius:var(--radius-sm);}
+  tbody tr:nth-child(even){background:rgba(124,114,102,0.05);}
+  tbody tr:active{background:rgba(232,121,28,0.08);}
 
   .navbar{position:fixed;bottom:0;left:0;right:0;background:var(--panel);border-top:1px solid var(--border);
-    display:flex;max-width:640px;margin:0 auto;box-shadow:0 -2px 10px rgba(60,45,20,0.06);}
-  .navbar button{flex:1;background:none;border:none;color:var(--text-dim);padding:12px 4px 10px 4px;
-    font-size:12px;font-weight:700;cursor:pointer;}
+    display:flex;max-width:640px;margin:0 auto;box-shadow:0 -4px 16px rgba(60,45,20,0.08);
+    padding-bottom:env(safe-area-inset-bottom, 0);}
+  .navbar button{flex:1;background:none;border:none;color:var(--text-dim);padding:10px 2px 8px 2px;
+    font-size:11px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;
+    transition:color .15s ease, transform .12s ease;}
+  .navbar button:active{transform:scale(0.92);}
   .navbar button.active{color:var(--accent);}
+  .nav-icon{width:22px;height:22px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;}
 
-  .toast{position:fixed;bottom:78px;left:16px;right:16px;max-width:608px;margin:0 auto;background:var(--field);
-    color:var(--text);padding:14px 16px;border-radius:var(--radius-sm);font-size:14px;
-    box-shadow:0 6px 20px rgba(0,0,0,0.4);display:none;z-index:50;}
+  .toast{position:fixed;bottom:84px;left:16px;right:16px;max-width:608px;margin:0 auto;background:var(--text);
+    color:#fff;padding:14px 16px;border-radius:var(--radius-sm);font-size:14px;
+    box-shadow:0 10px 28px rgba(0,0,0,0.28);display:none;z-index:50;animation:screenIn .2s ease;}
   .toast.show{display:block;}
   .toast.error{background:var(--danger);color:#fff;}
 
-  .login-wrap{display:flex;flex-direction:column;justify-content:center;min-height:100vh;padding:20px;}
-  .login-wrap h1{font-size:30px;margin-bottom:2px;}
-  .login-wrap p{color:var(--text-dim);margin-bottom:24px;}
-  .login-logo{max-width:240px;width:75%;display:block;margin:0 auto 4px auto;}
+  .login-wrap{display:flex;flex-direction:column;justify-content:center;min-height:100vh;padding:24px;position:relative;overflow:hidden;}
+  .login-spotlight{position:absolute;top:-10%;left:50%;transform:translateX(-50%);width:480px;height:480px;
+    background:radial-gradient(circle, rgba(232,121,28,0.20) 0%, rgba(232,121,28,0.06) 45%, transparent 70%);
+    pointer-events:none;}
+  .login-card{position:relative;background:var(--panel);border:1px solid var(--border);border-radius:22px;
+    padding:32px 26px;box-shadow:0 16px 40px rgba(60,45,20,0.12);}
+  .login-wrap p{color:var(--text-dim);margin:0 0 22px 0;text-align:center;font-weight:600;}
+  .login-logo{max-width:230px;width:80%;display:block;margin:0 auto 6px auto;}
 
   .admin-subnav{display:flex;gap:8px;overflow-x:auto;margin:12px 0 16px 0;padding-bottom:4px;}
   .admin-subnav button{flex:none;background:var(--field);color:var(--text-dim);border:none;border-radius:20px;
-    padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;}
-  .admin-subnav button.active{background:var(--accent);color:var(--accent-ink);}
+    padding:9px 15px;font-size:13px;font-weight:700;cursor:pointer;transition:transform .12s ease, background .15s ease;}
+  .admin-subnav button:active{transform:scale(0.95);}
+  .admin-subnav button.active{background:var(--accent);color:var(--accent-ink);box-shadow:0 3px 10px rgba(232,121,28,0.3);}
   .admin-pane{display:none;}
-  .admin-pane.active{display:block;}
+  .admin-pane.active{display:block; animation:screenIn .25s ease;}
 
-  .confirm-overlay{position:fixed;inset:0;background:rgba(36,31,26,0.5);display:none;
-    align-items:center;justify-content:center;z-index:200;padding:24px;}
+  .confirm-overlay{position:fixed;inset:0;background:rgba(36,31,26,0.55);display:none;
+    align-items:center;justify-content:center;z-index:200;padding:24px;backdrop-filter:blur(2px);}
   .confirm-overlay.show{display:flex;}
-  .confirm-card{background:#fff;border-radius:20px;padding:36px 28px;text-align:center;max-width:320px;width:100%;
-    box-shadow:0 16px 44px rgba(36,31,26,0.28);}
+  .confirm-card{background:#fff;border-radius:22px;padding:38px 28px;text-align:center;max-width:320px;width:100%;
+    box-shadow:0 20px 50px rgba(36,31,26,0.3); animation:screenIn .25s ease;}
   .confirm-icon{width:68px;height:68px;border-radius:50%;background:var(--good);color:#fff;font-size:34px;
-    display:flex;align-items:center;justify-content:center;margin:0 auto 16px auto;}
-  .confirm-icon.offline{background:var(--warn);}
+    display:flex;align-items:center;justify-content:center;margin:0 auto 16px auto;
+    box-shadow:0 6px 16px rgba(63,122,69,0.35);}
+  .confirm-icon.offline{background:var(--warn);box-shadow:0 6px 16px rgba(184,121,26,0.35);}
   .confirm-title{font-family:"Arial Black","Helvetica Neue",Arial,sans-serif;font-size:21px;font-weight:900;
     margin-bottom:6px;color:var(--text);}
   .confirm-sub{color:var(--text-dim);font-size:14px;line-height:1.4;}
@@ -136,13 +174,16 @@
 
 <!-- ============ LOGIN ============ -->
 <div id="screen-login" class="login-wrap">
-  <img src="logo-rir.png" alt="Rock im Ring" class="login-logo">
-  <p>Getränkeverwaltung</p>
-  <label for="pin-input">PIN eingeben</label>
-  <input type="text" inputmode="numeric" id="pin-input" placeholder="••••">
-  <div style="height:14px"></div>
-  <button class="btn primary" style="width:100%" onclick="doLogin(this)">Anmelden</button>
-  <div id="login-error" style="color:var(--danger);margin-top:12px;"></div>
+  <div class="login-spotlight"></div>
+  <div class="login-card">
+    <img src="logo-rir.png" alt="Rock im Ring" class="login-logo">
+    <p>Getränkeverwaltung</p>
+    <label for="pin-input">PIN eingeben</label>
+    <input type="text" inputmode="numeric" id="pin-input" placeholder="••••">
+    <div style="height:14px"></div>
+    <button class="btn primary" style="width:100%" onclick="doLogin(this)">Anmelden</button>
+    <div id="login-error" style="color:var(--danger);margin-top:12px;"></div>
+  </div>
 </div>
 
 <!-- ============ APP ============ -->
@@ -392,12 +433,30 @@
   </div>
 
   <div class="navbar">
-    <button data-screen="ausgabe" onclick="showScreen('ausgabe')" class="active">Ausgabe</button>
-    <button data-screen="rueckgabe" onclick="showScreen('rueckgabe')">Rückgabe</button>
-    <button data-screen="nachschub" id="nav-nachschub" onclick="showScreen('nachschub')" style="display:none;">Nachschub</button>
-    <button data-screen="bestand" id="nav-bestand" onclick="showScreen('bestand')" style="display:none;">Bestand</button>
-    <button data-screen="historie" onclick="showScreen('historie')">Historie</button>
-    <button data-screen="admin" id="nav-admin" onclick="showScreen('admin')" style="display:none;">Admin</button>
+    <button data-screen="ausgabe" onclick="showScreen('ausgabe')" class="active">
+      <svg viewBox="0 0 24 24" class="nav-icon"><path d="M7 3h10l-1.2 12.5a2 2 0 0 1-2 1.8h-3.6a2 2 0 0 1-2-1.8L7 3Z"/><path d="M5 3h14"/><path d="M9 21h6"/><path d="M12 17v4"/></svg>
+      <span>Ausgabe</span>
+    </button>
+    <button data-screen="rueckgabe" onclick="showScreen('rueckgabe')">
+      <svg viewBox="0 0 24 24" class="nav-icon"><path d="M4 12a8 8 0 1 1 2.5 5.8"/><path d="M4 17v-5h5"/></svg>
+      <span>Rückgabe</span>
+    </button>
+    <button data-screen="nachschub" id="nav-nachschub" onclick="showScreen('nachschub')" style="display:none;">
+      <svg viewBox="0 0 24 24" class="nav-icon"><path d="M3 8l9-5 9 5-9 5-9-5Z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>
+      <span>Nachschub</span>
+    </button>
+    <button data-screen="bestand" id="nav-bestand" onclick="showScreen('bestand')" style="display:none;">
+      <svg viewBox="0 0 24 24" class="nav-icon"><path d="M4 20V10"/><path d="M12 20V4"/><path d="M20 20v-7"/></svg>
+      <span>Bestand</span>
+    </button>
+    <button data-screen="historie" onclick="showScreen('historie')">
+      <svg viewBox="0 0 24 24" class="nav-icon"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>
+      <span>Historie</span>
+    </button>
+    <button data-screen="admin" id="nav-admin" onclick="showScreen('admin')" style="display:none;">
+      <svg viewBox="0 0 24 24" class="nav-icon"><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V19.5a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H4.5a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34H10a1.7 1.7 0 0 0 1-1.55V4.5a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87V10a1.7 1.7 0 0 0 1.55 1h.09a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1Z"/></svg>
+      <span>Admin</span>
+    </button>
   </div>
 </div>
 
@@ -879,7 +938,7 @@ function renderAdminGetraenkeList() {
       <div style="cursor:pointer;" onclick='editGetraenk(${JSON.stringify(g).replace(/'/g, "&#39;")})'>
         <div style="display:flex;justify-content:space-between;">
           <strong>${escapeHtml(g.Name)}</strong>
-          <span style="color:var(--text-dim);font-size:12px;">${String(g.Aktiv).toUpperCase()==='JA' ? 'aktiv' : 'inaktiv'}</span>
+          <span class="badge ${String(g.Aktiv).toUpperCase()==='JA' ? 'on' : 'off'}">${String(g.Aktiv).toUpperCase()==='JA' ? 'aktiv' : 'inaktiv'}</span>
         </div>
         <div class="sub" style="color:var(--text-dim);font-size:13px;margin-top:4px;">
           Basiseinheit: ${escapeHtml(g.Basiseinheit)}${basisvol} · Gebinde: ${gebinde} · Verkaufseinheit: ${verkauf}
@@ -1077,7 +1136,7 @@ function renderAdminVerkaufsgetraenkeList() {
     return `<div class="card" style="cursor:pointer;" onclick='editVerkaufsgetraenk(${JSON.stringify(v).replace(/'/g, "&#39;")})'>
       <div style="display:flex;justify-content:space-between;">
         <strong>${escapeHtml(v.Name)}</strong>
-        <span style="color:var(--text-dim);font-size:12px;">${String(v.Aktiv).toUpperCase()==='JA' ? 'aktiv' : 'inaktiv'}</span>
+        <span class="badge ${String(v.Aktiv).toUpperCase()==='JA' ? 'on' : 'off'}">${String(v.Aktiv).toUpperCase()==='JA' ? 'aktiv' : 'inaktiv'}</span>
       </div>
       <div class="sub" style="color:var(--text-dim);font-size:13px;margin-top:4px;">${zutText}</div>
     </div>`;

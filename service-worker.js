@@ -1,6 +1,6 @@
 // Speichert nur die App-Hülle (HTML/Icons) für den Offline-Start.
 // Die eigentlichen Daten kommen immer live von der Apps-Script-API.
-const CACHE_NAME = 'rir-app-shell-v6';
+const CACHE_NAME = 'rir-app-shell-v7';
 const SHELL_FILES = ['./index.html', './manifest.json', './icon-192.png', './icon-512.png', './logo-rir.png'];
 
 self.addEventListener('install', (event) => {
